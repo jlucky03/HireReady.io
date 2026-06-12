@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { FileText, Volume2, Code2, Upload, History, Award, UserCheck, Cpu, ClipboardCheck, Play } from 'lucide-react';
+import { auth } from "./firebase";
+import { useAuthStore } from "./store/authStore";
 
 export default function DashboardHome({ onStartInterview, onStartDsaPractice, onViewReport, history = [] }) {
   const [file, setFile] = useState(null);
+  const { user: authUser } = useAuthStore();
   const [loadingAts, setLoadingAts] = useState(false);
   const [atsResult, setAtsResult] = useState(null);
   const [cachedResumeText, setCachedResumeText] = useState(""); 
@@ -15,6 +18,24 @@ export default function DashboardHome({ onStartInterview, onStartDsaPractice, on
   
   // Clean custom text topic state for step 3
   const [dsaTopic, setDsaTopic] = useState('Arrays'); 
+
+  const user = auth.currentUser;
+
+const userName =
+  authUser?.name ||
+  user?.displayName ||
+  "Candidate";
+
+const userEmail =
+  authUser?.email ||
+  user?.email ||
+  "";
+
+const userAvatar =
+  user?.photoURL ||
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    userName
+  )}&background=6D28D9&color=fff`;
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
@@ -80,23 +101,54 @@ export default function DashboardHome({ onStartInterview, onStartDsaPractice, on
       <div className="max-w-6xl mx-auto space-y-12">
         
         {/* UPPER DASHBOARD HEADER BAR */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-gray-800 pb-6">
-          <div className="text-center sm:text-left space-y-1">
-            <h1 className="text-4xl font-black text-white tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              AI Interview Agent
-            </h1>
-            <p className="text-xs text-gray-400 max-w-xl">
-              Conversational role screening using local natural synthesis arrays, automated assessment tracking indices, and full-stack metrics telemetry.
-            </p>
-          </div>
+      <div className="flex flex-col lg:flex-row justify-between items-center gap-5 border-b border-gray-800 pb-6">
 
-          <button 
-            onClick={() => setShowHistoryModal(true)}
-            className="flex items-center gap-1.5 bg-[#151D30] hover:bg-gray-800 text-purple-400 hover:text-purple-300 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl border border-gray-800 hover:border-purple-500/20 transition-all cursor-pointer shadow-xl"
-          >
-            <History size={14} /> Review Past History ({history.length})
-          </button>
-        </div>
+  <div className="text-center lg:text-left space-y-1">
+    <h1 className="text-4xl font-black text-white tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+      HireReady AI
+    </h1>
+    <p className="text-xs text-gray-400 max-w-xl">
+      AI-powered interview preparation, ATS optimization and technical skill assessment platform.
+    </p>
+  </div>
+
+  <div className="flex items-center gap-3">
+
+    {/* Credits */}
+    <div className="bg-[#151D30] border border-yellow-500/20 px-4 py-2 rounded-xl">
+      <p className="text-[10px] uppercase text-gray-500">Credits</p>
+      <p className="text-lg font-bold text-yellow-400">{authUser?.credits ?? 0}</p>
+    </div>
+
+    {/* User */}
+    <div className="flex items-center gap-3 bg-[#151D30] border border-gray-800 px-3 py-2 rounded-xl">
+      <img
+        src={userAvatar}
+        alt="avatar"
+        className="w-11 h-11 rounded-full border border-purple-500/30"
+      />
+
+      <div className="hidden sm:block text-left">
+        <p className="text-sm font-semibold text-white truncate max-w-[160px]">
+          {userName}
+        </p>
+        <p className="text-[11px] text-gray-500 truncate max-w-[160px]">
+          {userEmail}
+        </p>
+      </div>
+    </div>
+
+    {/* History */}
+    <button
+      onClick={() => setShowHistoryModal(true)}
+      className="flex items-center gap-1.5 bg-[#151D30] hover:bg-gray-800 text-purple-400 hover:text-purple-300 text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-xl border border-gray-800 transition-all"
+    >
+      <History size={14} />
+      History
+    </button>
+
+  </div>
+</div>
 
         {/* LAYOUT GRID VECTOR PANELS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -10,8 +10,8 @@ import EvaluationReport from "./EvaluationReport";
 import CorporateGap from "./CorporateGap";
 
 export default function App() {
-  const { firebaseUser, setFirebaseUser, loading, setLoading, logoutStore } =
-    useAuthStore();
+ const { firebaseUser, setFirebaseUser, loading, setLoading, logoutStore, fetchMe } =
+  useAuthStore();
 
   const [activeView, setActiveView] = useState(() => {
     if (localStorage.getItem("intervyo_active_id")) return "voice_room";
@@ -47,6 +47,7 @@ if (user) {
   });
 
   localStorage.setItem("token", token);
+  await fetchMe(token);
 } else {
   localStorage.removeItem("token");
 }
