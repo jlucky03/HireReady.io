@@ -1,80 +1,75 @@
-import User from '../models/User.js';
-import jwt from 'jsonwebtoken';
+import User from "../models/User.js";
+import adminAuth from "../config/firebaseAdmin.js";
 
-const signToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
-};
-
-export const signup = async (req, res) => {
+export const firebaseLogin = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ message: "Firebase token is required" });
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email is already registered' });
+    const decoded = await adminAuth.verifyIdToken(token);
+
+    const uid = decoded.uid;
+    const email = decoded.email;
+    const name = decoded.name || email?.split("@")[0] || "User";
+    const picture = decoded.picture || "";
+    const provider = decoded.firebase?.sign_in_provider === "google.com" ? "google" : "password";
+
+    let user = await User.findOne({ $or: [{ firebaseUid: uid }, { email }] });
+
+    if (user) {
+      user.firebaseUid = user.firebaseUid || uid;
+      user.name = user.name || name;
+      user.photoURL = picture || user.photoURL;
+      user.authProvider = provider;
+      user.credits = user.credits ?? 5;
+      await user.save();
+    } else {
+      user = await User.create({
+        firebaseUid: uid,
+        name,
+        email,
+        photoURL: picture,
+        authProvider: provider,
+        credits: 5,
+      });
     }
 
-    const newUser = await User.create({ name, email, password });
-    const token = signToken(newUser._id);
-
-    res.status(201).json({
-      status: 'success',
-      token,
-      user: { id: newUser._id, name: newUser.name, email: newUser.email },
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Please provide email and password' });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return res.status(401).json({ message: 'Incorrect email or password' });
-    }
-
-    const token = signToken(user._id);
     res.status(200).json({
-      status: 'success',
-      token,
-      user: { id: user._id, name: user.name, email: user.email },
+      status: "success",
+      user: {
+        id: user._id,
+        firebaseUid: user.firebaseUid,
+        name: user.name,
+        email: user.email,
+        photoURL: user.photoURL,
+        credits: user.credits,
+        role: user.role,
+      },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Firebase login error:", err.message);
+    res.status(401).json({ message: err.message });
   }
 };
 
-// Route Guard Middleware to shield private endpoints
 export const protect = async (req, res, next) => {
   try {
     let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
-    if (!token) {
-      return res.status(401).json({ message: 'Access denied. Token missing.' });
-    }
+    if (!token) return res.status(401).json({ message: "Access denied. Token missing." });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const currentUser = await User.findById(decoded.id);
-    
-    if (!currentUser) {
-      return res.status(401).json({ message: 'The user session no longer exists.' });
-    }
+    const decoded = await adminAuth.verifyIdToken(token);
+    const user = await User.findOne({ firebaseUid: decoded.uid });
 
-    req.user = currentUser;
+    if (!user) return res.status(401).json({ message: "User not found in database" });
+
+    req.user = user;
     next();
   } catch (err) {
-    res.status(401).json({ message: 'Invalid or expired token.' });
+    res.status(401).json({ message: "Invalid or expired Firebase token" });
   }
 };

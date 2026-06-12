@@ -1,159 +1,162 @@
-import React, { useState, useEffect } from 'react';
-import Auth from './Auth';
-import DashboardHome from './DashboardHome';
-import HistoryCenter from './HistoryCenter';
-import InterviewSetup from './InterviewSetup';
-import InterviewRoom from './InterviewRoom';
-import PerformanceDashboard from './PerformanceDashboard';
-import AtsOptimizer from './AtsOptimizer';
-import CorporateGap from './CorporateGap';
+import React, { useState, useEffect } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
+import { useAuthStore } from "./store/authStore";
+
+import AuthPage from "./AuthPage";
+import DashboardHome from "./DashboardHome";
+import InterviewRoom from "./InterviewRoom";
+import EvaluationReport from "./EvaluationReport";
+import CorporateGap from "./CorporateGap";
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [activeInterview, setActiveInterview] = useState(null);
-  
-  // Supported views: 'dashboard' | 'history-list' | 'setup' | 'active' | 'report' | 'ats' | 'gap'
-  const [currentView, setCurrentView] = useState('dashboard');
-  const [appLoading, setAppLoading] = useState(true);
+  const { firebaseUser, setFirebaseUser, loading, setLoading, logoutStore } =
+    useAuthStore();
+
+  const [activeView, setActiveView] = useState(() => {
+    if (localStorage.getItem("intervyo_active_id")) return "voice_room";
+    return "dashboard";
+  });
+
+  const [sessionTopic, setSessionTopic] = useState(
+    () => localStorage.getItem("intervyo_active_topic") || ""
+  );
+
+  const [sessionDifficulty, setSessionDifficulty] = useState(
+    () => localStorage.getItem("intervyo_active_difficulty") || "medium"
+  );
+
+  const [historyLogs, setHistoryLogs] = useState([]);
+  const [completedReportData, setCompletedReportData] = useState(null);
+
+useEffect(() => {
+
+  const unsub = onAuthStateChanged(auth, async (user) => {
+    setFirebaseUser(user);
+
+if (user) {
+  const token = await user.getIdToken();
+
+  await fetch("http://localhost:5000/api/auth/firebase-login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ token }),
+  });
+
+  localStorage.setItem("token", token);
+} else {
+  localStorage.removeItem("token");
+}
+
+    setLoading(false);
+  });
+
+  return () => unsub();
+}, []);
 
   useEffect(() => {
-    const bootstrapSession = async () => {
-      const savedUser = localStorage.getItem('user');
-      const savedToken = localStorage.getItem('token');
-      const savedActiveInterviewId = localStorage.getItem('activeInterviewId');
+    if (firebaseUser) fetchHistory();
+  }, [activeView, firebaseUser]);
 
-      if (savedUser && savedToken) {
-        setUser(JSON.parse(savedUser));
+  useEffect(() => {
+    if (activeView === "voice_room") {
+      localStorage.setItem("intervyo_active_topic", sessionTopic);
+      localStorage.setItem("intervyo_active_difficulty", sessionDifficulty);
+    }
+  }, [activeView, sessionTopic, sessionDifficulty]);
 
-        // ---- RESUME INTERVIEW ON REFRESH ENGINE ----
-        if (savedActiveInterviewId) {
-          try {
-            const response = await fetch(`http://localhost:5000/api/interviews/${savedActiveInterviewId}`, {
-              headers: { 'Authorization': `Bearer ${savedToken}` }
-            });
-            const data = await response.json();
-            if (response.ok && data.interview && !data.interview.isFinished) {
-              setActiveInterview(data.interview);
-              setCurrentView('active'); // Route straight back into the coding lab!
-            } else {
-              localStorage.removeItem('activeInterviewId');
-            }
-          } catch (err) {
-            console.error("Failed to restore refreshed interview vectors:", err);
-          }
-        }
-      }
-      setAppLoading(false);
-    };
+  const fetchHistory = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
 
-    bootstrapSession();
-  }, []);
+      const response = await fetch("http://localhost:5000/api/interviews/history", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const handleAuthSuccess = () => {
-    setUser(JSON.parse(localStorage.getItem('user')));
-    setCurrentView('dashboard');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('activeInterviewId');
-    setUser(null);
-    setActiveInterview(null);
-    setCurrentView('dashboard');
-  };
-
-  const handleSelectInterviewFromHistory = (interviewSession) => {
-    setActiveInterview(interviewSession);
-    if (interviewSession.isFinished) {
-      setCurrentView('report');
-    } else {
-      localStorage.setItem('activeInterviewId', interviewSession._id); // Lock id cache
-      setCurrentView('active');
+      const data = await response.json();
+      if (response.ok && Array.isArray(data)) setHistoryLogs(data);
+    } catch (err) {
+      console.error("Failed to sync history:", err);
     }
   };
 
-  if (appLoading) {
+  const handleLogout = async () => {
+    await signOut(auth);
+    logoutStore();
+    localStorage.clear();
+    setActiveView("dashboard");
+  };
+
+  const startInterviewHandler = (topic, difficulty) => {
+    setSessionTopic(topic);
+    setSessionDifficulty(difficulty);
+    setActiveView("voice_room");
+  };
+
+  const handleDisplayEvaluationReport = (interviewData) => {
+    setCompletedReportData(interviewData);
+    setActiveView("evaluation");
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center font-mono text-xs text-blue-400 animate-pulse">
-        Synchronizing active placement session state vectors...
+      <div className="min-h-screen bg-[#0B0F19] text-white flex items-center justify-center">
+        Loading HireReady AI...
       </div>
     );
   }
 
-  if (!user) {
-    return <Auth onAuthSuccess={handleAuthSuccess} />;
-  }
+  if (!firebaseUser) return <AuthPage />;
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-gray-100">
-      
-      {/* 1. Main Hub Landing Page View */}
-      {currentView === 'dashboard' && (
-        <DashboardHome 
-          onLaunchInterviewSetup={() => setCurrentView('setup')}
-          onLaunchAts={() => setCurrentView('ats')}
-          onLaunchGap={() => setCurrentView('gap')}
-          onOpenHistory={() => setCurrentView('history-list')}
-          onLogout={handleLogout}
+    <div className="bg-[#0B0F19] min-h-screen text-gray-100 selection:bg-purple-500/30">
+      <button
+        onClick={handleLogout}
+        className="fixed top-4 right-4 z-50 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
+      >
+        Logout
+      </button>
+
+      {activeView === "dashboard" && (
+        <DashboardHome
+          onStartInterview={startInterviewHandler}
+          onStartDsaPractice={(topic, diff) => {
+            setSessionTopic(topic);
+            setSessionDifficulty(diff);
+            setActiveView("corporate_gap");
+          }}
+          onViewReport={handleDisplayEvaluationReport}
+          history={historyLogs}
         />
       )}
 
-      {/* 2. Isolated Full History Logs Index Page */}
-      {currentView === 'history-list' && (
-        <HistoryCenter 
-          onClose={() => setCurrentView('dashboard')}
-          onSelectInterview={handleSelectInterviewFromHistory}
+      {activeView === "voice_room" && (
+        <InterviewRoom
+          topic={sessionTopic}
+          difficulty={sessionDifficulty}
+          onExit={() => setActiveView("dashboard")}
+          onFinished={handleDisplayEvaluationReport}
         />
       )}
 
-      {/* 3. Dedicated ATS Parser Matrix Workdesk */}
-      {currentView === 'ats' && (
-        <AtsOptimizer onBackToHome={() => setCurrentView('dashboard')} />
-      )}
-
-      {/* 4. Dedicated Corporate Alignment Gap Sheet */}
-      {currentView === 'gap' && (
-        <CorporateGap onBackToHome={() => setCurrentView('dashboard')} />
-      )}
-
-      {/* 5. Parameter Configuration Form Entry Screen */}
-      {currentView === 'setup' && (
-        <InterviewSetup 
-          onStartInterview={(session) => {
-            setActiveInterview(session);
-            localStorage.setItem('activeInterviewId', session._id); // Register session lock
-            setCurrentView('active');
-          }} 
+      {activeView === "evaluation" && (
+        <EvaluationReport
+          report={completedReportData}
+          onClose={() => setActiveView("dashboard")}
         />
       )}
 
-      {/* 6. Live Active Monaco Code IDE Lab Screen */}
-      {currentView === 'active' && (
-        <InterviewRoom 
-          interview={activeInterview} 
-          onInterviewUpdate={(updatedSession) => {
-            setActiveInterview(updatedSession);
-            if (updatedSession.isFinished) {
-              localStorage.removeItem('activeInterviewId'); // Clear lock on completion
-              setCurrentView('report');
-            }
-          }} 
-          onBackToHome={() => {
-            localStorage.removeItem('activeInterviewId'); // Clean tracking parameter on manual exit
-            setCurrentView('dashboard');
-          }} 
+      {activeView === "corporate_gap" && (
+        <CorporateGap
+          topic={sessionTopic}
+          difficulty={sessionDifficulty}
+          onBackToHome={() => setActiveView("dashboard")}
         />
       )}
-
-      {/* 7. Isolated Performance Review Analytics Report Card View */}
-      {currentView === 'report' && (
-        <PerformanceDashboard 
-          interview={activeInterview} 
-          onReset={() => setCurrentView('dashboard')}
-        />
-      )}
-
     </div>
   );
 }
