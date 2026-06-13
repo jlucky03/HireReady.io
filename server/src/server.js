@@ -15,8 +15,6 @@ const app = express();
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
-console.log("Razorpay Key:", process.env.RAZORPAY_KEY_ID);
-
 // 🌟 Secure API Endpoint Wireframes
 app.use('/api/auth', authRoutes);
 app.use('/api/interviews', interviewRoutes);

@@ -41,35 +41,51 @@ export default function BuyCredits({ onClose, showToast }) {
       const order = await orderRes.json();
       if (!orderRes.ok) throw new Error(order.message || "Order creation failed.");
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: "HireReady AI",
-        description: `${order.credits} Credits Purchase`,
-        order_id: order.orderId,
-        handler: async (response) => {
-          const verifyRes = await fetch("http://localhost:5000/api/payments/verify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(response),
-          });
+   const options = {
+  key: order.key,
+  amount: order.amount,
+  currency: order.currency,
+  name: "HireReady AI",
+  description: `${order.credits} Credits Purchase`,
+  order_id: order.orderId,
 
-          const verifyData = await verifyRes.json();
-          if (!verifyRes.ok) throw new Error(verifyData.message || "Payment verification failed.");
+  handler: async (response) => {
+    const verifyRes = await fetch("http://localhost:5000/api/payments/verify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(response),
+    });
 
-          setUser({ ...user, credits: verifyData.credits });
-          showToast("Credits added successfully!");
-          onClose();
-        },
-        theme: { color: "#7C3AED" },
-      };
+    const verifyData = await verifyRes.json();
 
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+    if (!verifyRes.ok) {
+      throw new Error(verifyData.message || "Payment verification failed.");
+    }
+
+    setUser({ ...user, credits: verifyData.credits });
+    showToast("Credits added successfully!");
+    onClose();
+  },
+
+  modal: {
+    ondismiss: () => {
+      showToast("Payment cancelled.");
+    },
+  },
+
+  theme: { color: "#7C3AED" },
+};
+
+const razorpay = new window.Razorpay(options);
+
+razorpay.on("payment.failed", function (response) {
+  showToast(response.error.description || "Payment failed.");
+});
+
+razorpay.open();
     } catch (err) {
       showToast(err.message || "Payment failed.");
     } finally {

@@ -26,7 +26,7 @@ const razorpay = getRazorpay();
 const order = await razorpay.orders.create({
       amount: selectedPlan.amount,
       currency: "INR",
-      receipt: `credits_${req.user._id}_${Date.now()}`,
+      receipt: `cr_${Date.now()}`,
     });
 
     await Payment.create({
@@ -45,8 +45,9 @@ const order = await razorpay.orders.create({
       credits: selectedPlan.credits,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  console.error("Create order error:", err);
+  res.status(500).json({ message: err.message });
+}
 };
 
 export const verifyCreditPayment = async (req, res) => {
@@ -98,6 +99,7 @@ export const verifyCreditPayment = async (req, res) => {
       credits: req.user.credits,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  console.error("Create order error:", err);
+  res.status(500).json({ message: err.message });
+}
 };
