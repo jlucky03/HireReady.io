@@ -78,9 +78,14 @@ const userAvatar =
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'ATS execution pipeline rejection.');
 
-      setAtsResult(data.atsAnalysis);
-      showToast("ATS analysis completed successfully!");
-      setCachedResumeText(data.extractedText || ""); 
+setAtsResult(data.atsAnalysis);
+setCachedResumeText(data.extractedText || "");
+
+if (data.cached) {
+  showToast("⚡ Redis Cache Hit — skipped AI processing.");
+} else {
+  showToast("🚀 AI analysis completed and cached.");
+}
       
       if (typeof data.remainingCredits === "number") {
   setUser({ ...authUser, credits: data.remainingCredits });
@@ -330,7 +335,11 @@ const userAvatar =
                   atsResult.improvements.map((item, idx) => (
                     <li key={idx} className="flex gap-2.5 text-xs text-gray-300 bg-[#0B0F19] border border-gray-800/40 p-3.5 rounded-xl leading-relaxed select-text">
                       <Award size={14} className="text-blue-500 shrink-0 mt-0.5" />
-                      <span>{item}</span>
+                      <span>
+  {typeof item === "string"
+    ? item
+    : item?.suggest || item?.project || JSON.stringify(item)}
+</span>
                     </li>
                   ))
                 ) : (

@@ -1,5 +1,11 @@
 import PDFParser from 'pdf2json';
 import Groq from 'groq-sdk';
+import crypto from "crypto";
+import redisClient from "../config/redis.js";
+
+const getResumeHash = (text) => {
+  return crypto.createHash("sha256").update(text).digest("hex");
+};
 
 let groqInstance = null;
 const getGroqClient = () => {
@@ -106,19 +112,35 @@ export const analyzeAtsResumeScore = async (req, res) => {
     if (!req.file || !req.file.buffer) {
       return res.status(400).json({ message: 'Missing parameters. Please provide a valid resume PDF file.' });
     }
-
-    // Credit check
-if (req.user.credits < 1) {
-  return res.status(402).json({
-    message: "Not enough credits. ATS scan requires 1 credit."
-  });
-}
-
     const resumeRawText = await parsePdfText(new PDFParser(), req.file.buffer);
 
     if (!resumeRawText || !resumeRawText.trim()) {
       return res.status(400).json({ message: 'Unable to read file contents. The uploaded PDF may be empty or image-only.' });
     }
+
+    const resumeHash = getResumeHash(resumeRawText);
+const cacheKey = `ats:${req.user._id}:${resumeHash}`;
+
+const cached = await redisClient.get(cacheKey);
+
+if (cached) {
+  const cachedData = JSON.parse(cached);
+
+  return res.status(200).json({
+    status: "success",
+    atsAnalysis: cachedData.atsAnalysis,
+    extractedText: cachedData.extractedText,
+    remainingCredits: req.user.credits,
+    cached: true,
+  });
+}
+
+// Credit check only if not cached
+if (req.user.credits < 1) {
+  return res.status(402).json({
+    message: "Not enough credits. ATS scan requires 1 credit.",
+  });
+}
 
     const prompt = `You are an elite, enterprise-grade Technical Recruiter and Automated ATS Resume Optimizer.
 Analyze the following extracted text from a candidate's resume:
@@ -164,11 +186,20 @@ Target Schema:
 req.user.credits -= 1;
 await req.user.save();
 
+await redisClient.setEx(
+  cacheKey,
+  60 * 60 * 24,
+  JSON.stringify({
+    atsAnalysis: aiOutput,
+    extractedText: resumeRawText,
+  })
+);
 res.status(200).json({
   status: 'success',
   atsAnalysis: aiOutput,
   extractedText: resumeRawText,
-  remainingCredits: req.user.credits
+  remainingCredits: req.user.credits,
+  cached: false
 });
   } catch (err) {
     res.status(500).json({ message: err?.message || 'Unexpected server error.' });
