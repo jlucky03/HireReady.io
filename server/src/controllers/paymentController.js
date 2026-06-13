@@ -103,3 +103,18 @@ export const verifyCreditPayment = async (req, res) => {
   res.status(500).json({ message: err.message });
 }
 };
+
+export const getPaymentHistory = async (req, res) => {
+  try {
+  const payments = await Payment.find({
+  user: req.user._id,
+  status: "paid",
+})
+  .sort({ createdAt: -1 })
+  .select("amount credits status razorpayPaymentId createdAt");
+
+    res.status(200).json(payments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

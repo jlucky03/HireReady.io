@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import BuyCredits from "./BuyCredits";
+import PaymentHistory from "./PaymentHistory";
 import {
   FileText,
   Volume2,
@@ -22,6 +23,7 @@ export default function DashboardHome({ onStartInterview, onViewReport, history 
   const [cachedResumeText, setCachedResumeText] = useState(""); 
   const [showHistoryModal, setShowHistoryModal] = useState(false); 
   const [showBuyCredits, setShowBuyCredits] = useState(false);
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false);
 
   // Selection configurations
   const [selectedTopic, setSelectedTopic] = useState('MERN Stack');
@@ -186,12 +188,12 @@ const userAvatar =
   Buy Credits
 </button>
 
-{showBuyCredits && (
-  <BuyCredits
-    onClose={() => setShowBuyCredits(false)}
-    showToast={showToast}
-  />
-)}
+<button
+  onClick={() => setShowPaymentHistory(true)}
+  className="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold uppercase py-2.5 px-4 rounded-xl"
+>
+  Billing History
+</button>
 
   </div>
 </div>
@@ -428,6 +430,20 @@ onStartInterview(session.topic, session.difficulty);
             </div>
           </div>
         )}
+
+        
+{showBuyCredits && (
+  <BuyCredits
+    onClose={() => setShowBuyCredits(false)}
+    showToast={showToast}
+  />
+)}
+
+{showPaymentHistory && (
+  <PaymentHistory
+    onClose={() => setShowPaymentHistory(false)}
+  />
+)}
 
       </div>
     </div>
