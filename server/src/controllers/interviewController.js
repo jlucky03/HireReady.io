@@ -19,6 +19,13 @@ export const startInterview = async (req, res) => {
     const { topic, difficulty } = req.body;
     const userId = req.user?._id;
 
+    // Credit check
+if (req.user.credits < 3) {
+  return res.status(402).json({
+    message: "Not enough credits. Starting an interview requires 3 credits."
+  });
+}
+
     if (!topic || !difficulty) {
       return res.status(400).json({ message: 'Missing parameters. Please provide topic and difficulty.' });
     }
@@ -62,11 +69,15 @@ export const startInterview = async (req, res) => {
       isFinished: false
     });
 
-    res.status(200).json({
-      status: 'success',
-      interviewId: newInterview._id,
-      question: initialQuestion
-    });
+    req.user.credits -= 3;
+await req.user.save();
+
+  res.status(200).json({
+  status: 'success',
+  interviewId: newInterview._id,
+  question: initialQuestion,
+  remainingCredits: req.user.credits
+});
 
   } catch (err) {
     res.status(500).json({ message: err.message || 'Unexpected voice session startup error.' });

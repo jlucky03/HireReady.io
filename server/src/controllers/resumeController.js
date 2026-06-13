@@ -107,6 +107,13 @@ export const analyzeAtsResumeScore = async (req, res) => {
       return res.status(400).json({ message: 'Missing parameters. Please provide a valid resume PDF file.' });
     }
 
+    // Credit check
+if (req.user.credits < 1) {
+  return res.status(402).json({
+    message: "Not enough credits. ATS scan requires 1 credit."
+  });
+}
+
     const resumeRawText = await parsePdfText(new PDFParser(), req.file.buffer);
 
     if (!resumeRawText || !resumeRawText.trim()) {
@@ -153,11 +160,16 @@ Target Schema:
       aiOutput = defaultAtsFallback;
     }
 
-    res.status(200).json({
-      status: 'success',
-      atsAnalysis: aiOutput,
-      extractedText: resumeRawText
-    });
+// Deduct 1 credit after successful analysis
+req.user.credits -= 1;
+await req.user.save();
+
+res.status(200).json({
+  status: 'success',
+  atsAnalysis: aiOutput,
+  extractedText: resumeRawText,
+  remainingCredits: req.user.credits
+});
   } catch (err) {
     res.status(500).json({ message: err?.message || 'Unexpected server error.' });
   }

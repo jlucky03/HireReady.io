@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, ArrowRight, Loader2, MessageSquare, User, Headphones, AlertTriangle } from 'lucide-react';
+import { useAuthStore } from "./store/authStore";
 
 export default function InterviewRoom({ topic, difficulty, onExit, onFinished }) {
   // 🌟 READ PERSISTENT STATE ON MOUNT: Check if there's a cached state from a previous refresh
+  const { user: authUser, setUser } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(() => {
     const savedStep = localStorage.getItem('intervyo_current_step');
     return savedStep ? parseInt(savedStep, 10) : 1;
@@ -90,20 +92,21 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
       if (!isMounted.current) return;
 
       if (response.ok && data.question) {
+        if (typeof data.remainingCredits === "number") {
+  setUser({ ...authUser, credits: data.remainingCredits });
+}
         setActiveId(data.interviewId);
         setQuestion(data.question);
         speakText(data.question);
       } else {
         throw new Error(data.message || "Failed to initialize active screening session.");
       }
-    } catch (err) {
-      if (isMounted.current) {
-        setNetworkError("Failed to start session. Verify server connectivity.");
-        const fallbackQ = "Explain how you handle asynchronous middleware state errors in an Express API.";
-        setQuestion(fallbackQ);
-        speakText(fallbackQ);
-      }
-    }
+   } catch (err) {
+  if (isMounted.current) {
+    setNetworkError(err.message || "Failed to start session.");
+    setQuestion("Unable to start interview session.");
+  }
+}
   };
 
   const speakText = (text) => {

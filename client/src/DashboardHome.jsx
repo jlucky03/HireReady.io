@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { FileText, Volume2, Code2, Upload, History, Award, UserCheck, Cpu, ClipboardCheck, Play } from 'lucide-react';
+import {
+  FileText,
+  Volume2,
+  Upload,
+  History,
+  Award,
+  UserCheck,
+  Cpu,
+  ClipboardCheck,
+  Play
+} from "lucide-react";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
 
-export default function DashboardHome({ onStartInterview, onStartDsaPractice, onViewReport, history = [] }) {
+export default function DashboardHome({ onStartInterview, onViewReport, history = [], showToast }) {
   const [file, setFile] = useState(null);
-  const { user: authUser } = useAuthStore();
+  const { user: authUser, setUser } = useAuthStore();
   const [loadingAts, setLoadingAts] = useState(false);
   const [atsResult, setAtsResult] = useState(null);
   const [cachedResumeText, setCachedResumeText] = useState(""); 
@@ -16,8 +26,8 @@ export default function DashboardHome({ onStartInterview, onStartDsaPractice, on
   const [interviewMode, setInterviewMode] = useState('standard'); 
   const [selectedDifficulty, setSelectedDifficulty] = useState('Medium');
   
-  // Clean custom text topic state for step 3
-  const [dsaTopic, setDsaTopic] = useState('Arrays'); 
+
+
 
   const user = auth.currentUser;
 
@@ -65,29 +75,42 @@ const userAvatar =
       if (!response.ok) throw new Error(data.message || 'ATS execution pipeline rejection.');
 
       setAtsResult(data.atsAnalysis);
+      showToast("ATS analysis completed successfully!");
       setCachedResumeText(data.extractedText || ""); 
       
+      if (typeof data.remainingCredits === "number") {
+  setUser({ ...authUser, credits: data.remainingCredits });
+}
+
       if (data.extractedText) {
         setInterviewMode('resume');
       }
     } catch (err) {
-      alert("SaaS Platform Warning: " + err.message);
+      showToast(err.message || "ATS analysis failed.");
     } finally {
       // ✅ FIXED TYPO HERE: Corrected from 'fillAll' to standard 'finally' block
       setLoadingAts(false);
     }
   };
 
-  const handleLaunchVoiceSession = () => {
-    if (interviewMode === 'resume' && !cachedResumeText) {
-      alert("Configuration Warning: No resume text cached inside app state. Please run Step 1 parser first.");
-      return;
-    }
+ const handleLaunchVoiceSession = () => {
+  if (authUser?.credits < 3) {
+    showToast("You need at least 3 credits to start an interview.");
+    return;
+  }
 
-    const focusPayload = interviewMode === 'resume' ? `RESUME_DATA_STREAM: ${cachedResumeText}` : selectedTopic;
-    onStartInterview(focusPayload, selectedDifficulty.toLowerCase());
-  };
+  if (interviewMode === 'resume' && !cachedResumeText) {
+    showToast("Please run ATS resume scan first.");
+    return;
+  }
 
+  const focusPayload =
+    interviewMode === 'resume'
+      ? `RESUME_DATA_STREAM: ${cachedResumeText}`
+      : selectedTopic;
+
+  onStartInterview(focusPayload, selectedDifficulty.toLowerCase());
+};
   const formatTopicTitle = (title) => {
     if (!title) return "Technical Interview";
     if (title.startsWith("RESUME_DATA_STREAM") || title.length > 40) {
@@ -117,7 +140,14 @@ const userAvatar =
     {/* Credits */}
     <div className="bg-[#151D30] border border-yellow-500/20 px-4 py-2 rounded-xl">
       <p className="text-[10px] uppercase text-gray-500">Credits</p>
-      <p className="text-lg font-bold text-yellow-400">{authUser?.credits ?? 0}</p>
+ <p className={`text-lg font-bold ${
+  (authUser?.credits ?? 0) >= 3
+    ? "text-emerald-400"
+    : "text-yellow-400"
+}`}>{authUser?.credits ?? 0}</p>
+<p className="text-[9px] text-gray-500 mt-1">
+  3 credits / interview • 1 credit / ATS
+</p>
     </div>
 
     {/* User */}
@@ -151,7 +181,7 @@ const userAvatar =
 </div>
 
         {/* LAYOUT GRID VECTOR PANELS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* STEP 1: INSTANT ATS RESUME CALCULATOR */}
           <div className="bg-[#151D30]/60 border border-gray-800/80 rounded-2xl p-6 flex flex-col justify-between text-center relative overflow-hidden transition-all hover:bg-[#151D30] hover:border-gray-700/60">
@@ -177,9 +207,17 @@ const userAvatar =
                     {file ? file.name : "Choose PDF Layout"}
                   </span>
                 </div>
-                <button type="submit" disabled={loadingAts || !file} className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[11px] font-bold uppercase tracking-wider py-2.5 rounded-xl transition-all shadow-md cursor-pointer">
-                  {loadingAts ? "Parsing Clusters..." : "Calculate ATS Match"}
-                </button>
+             <button
+  type="submit"
+  disabled={loadingAts || !file}
+  className={`w-full text-white text-[11px] font-bold uppercase tracking-wider py-2.5 rounded-xl transition-all shadow-md ${
+    loadingAts || !file
+      ? "bg-blue-600/50 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-500 cursor-pointer"
+  }`}
+>
+  {loadingAts ? "Parsing Clusters..." : "Calculate ATS Match"}
+</button>
               </form>
             </div>
           </div>
@@ -204,9 +242,20 @@ const userAvatar =
                 <button type="button" onClick={() => setInterviewMode('standard')} className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${interviewMode === 'standard' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}>
                   Standard Topic
                 </button>
-                <button type="button" onClick={() => setInterviewMode('resume')} className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${interviewMode === 'resume' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}>
-                  <UserCheck size={11} /> From Resume
-                </button>
+                <button
+  type="button"
+  disabled={!cachedResumeText}
+  onClick={() => setInterviewMode("resume")}
+  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${
+    !cachedResumeText
+      ? "opacity-50 cursor-not-allowed text-gray-500"
+      : interviewMode === "resume"
+      ? "bg-purple-600 text-white"
+      : "text-gray-400"
+  }`}
+>
+  <UserCheck size={11} /> From Resume
+</button>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-1 text-left">
@@ -214,7 +263,7 @@ const userAvatar =
                   <label className="text-[9px] uppercase font-bold text-gray-500 tracking-wide">Focus Target</label>
                   {interviewMode === 'resume' ? (
                     <div className="w-full bg-[#0B0F19]/40 border border-purple-900/20 px-2 py-2 rounded-lg text-[10px] text-purple-400 font-medium tracking-wide truncate select-none">
-                      ✨ Active Profile
+                      ✨ Resume Loaded
                     </div>
                   ) : (
                     <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full bg-[#0B0F19] border border-gray-800 px-2 py-1.5 rounded-lg text-[11px] font-mono text-gray-300 focus:outline-none cursor-pointer">
@@ -236,47 +285,6 @@ const userAvatar =
             </div>
             <button type="button" onClick={handleLaunchVoiceSession} className="w-full mt-4 bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-bold uppercase tracking-wider py-2.5 rounded-xl shadow-md transition-all cursor-pointer">
               Launch Interview
-            </button>
-          </div>
-
-          {/* STEP 3: LEETCODE EXAM BLUEPRINT WORKSPACE */}
-          <div className="bg-[#151D30]/60 border border-gray-800/80 rounded-2xl p-6 flex flex-col justify-between text-center relative overflow-hidden transition-all hover:bg-[#151D30] hover:border-gray-700/60">
-            <div className="space-y-4">
-              <div className="inline-flex mx-auto bg-gray-800/40 border border-gray-700/60 text-gray-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full select-none">
-                Step 3
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/10">
-                <Code2 size={20} />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white tracking-wide">Dynamic LeetCode Workspace</h3>
-                <p className="text-xs text-gray-400 mt-1 leading-relaxed px-2">
-                  Type any data structure or algorithm keyword. Generate an automated full-fledged 3-question programming test instantly.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 pt-1 text-left">
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-bold text-gray-500 tracking-wide">Enter Core DSA Topic / Structure</label>
-                  <input 
-                    type="text"
-                    value={dsaTopic}
-                    onChange={(e) => setDsaTopic(e.target.value)}
-                    placeholder="e.g. Sliding Window, Tries, Graphs, Trees"
-                    className="w-full bg-[#0B0F19] border border-gray-800 px-3 py-2.5 rounded-xl text-[11px] font-mono text-gray-200 focus:border-amber-500/30 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-            <button 
-              type="button" 
-              onClick={() => {
-                if(!dsaTopic.trim()) { alert("Please specify an algorithmic topic first."); return; }
-                onStartDsaPractice(dsaTopic, "progressive");
-              }} 
-              className="w-full mt-4 bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-bold uppercase tracking-wider py-2.5 rounded-xl shadow-md transition-all cursor-pointer"
-            >
-              Initialize Practice
             </button>
           </div>
 
@@ -367,14 +375,26 @@ const userAvatar =
                           </button>
                         ) : (
                           <button
-                            onClick={() => {
-                              setShowHistoryModal(false);
-                              localStorage.setItem('intervyo_active_id', session._id);
-                              localStorage.setItem('intervyo_current_step', (session.currentStep || session.questions.length || 1).toString());
-                              const lastQuestion = session.questions?.[session.questions.length - 1]?.question || "Resume interview question";
-                              localStorage.setItem('intervyo_current_question', lastQuestion);
-                              onStartInterview(session.topic, session.difficulty);
-                            }}
+                       onClick={() => {
+  setShowHistoryModal(false);
+
+  localStorage.setItem('intervyo_active_id', session._id);
+  localStorage.setItem(
+    'intervyo_current_step',
+    (session.currentStep || session.questions.length || 1).toString()
+  );
+
+  const lastQuestion =
+    session.questions?.[session.questions.length - 1]?.question ||
+    "Resume interview question";
+localStorage.setItem(
+  'intervyo_current_question',
+  lastQuestion
+);
+
+// Resume existing session (no extra credit deduction)
+onStartInterview(session.topic, session.difficulty);
+}}
                             className="bg-amber-600/20 border border-amber-500/30 hover:bg-amber-600 hover:text-white text-amber-400 px-3 py-1.5 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
                           >
                             <Play size={12} className="fill-amber-400" /> Resume Room

@@ -10,6 +10,13 @@ import EvaluationReport from "./EvaluationReport";
 import CorporateGap from "./CorporateGap";
 
 export default function App() {
+
+  const [toast, setToast] = useState("");
+
+    const showToast = (msg) => {
+  setToast(msg);
+  setTimeout(() => setToast(""), 3000);
+};
  const { firebaseUser, setFirebaseUser, loading, setLoading, logoutStore, fetchMe } =
   useAuthStore();
 
@@ -113,6 +120,7 @@ if (user) {
 
   if (!firebaseUser) return <AuthPage />;
 
+
   return (
     <div className="bg-[#0B0F19] min-h-screen text-gray-100 selection:bg-purple-500/30">
       <button
@@ -122,16 +130,20 @@ if (user) {
         Logout
       </button>
 
+      {toast && (
+  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50
+                  bg-red-500/90 text-white px-6 py-3 rounded-xl
+                  shadow-2xl border border-red-400 animate-pulse">
+    ⚠️ {toast}
+  </div>
+)}
+
       {activeView === "dashboard" && (
         <DashboardHome
-          onStartInterview={startInterviewHandler}
-          onStartDsaPractice={(topic, diff) => {
-            setSessionTopic(topic);
-            setSessionDifficulty(diff);
-            setActiveView("corporate_gap");
-          }}
+  onStartInterview={startInterviewHandler}    
           onViewReport={handleDisplayEvaluationReport}
           history={historyLogs}
+           showToast={showToast}
         />
       )}
 
