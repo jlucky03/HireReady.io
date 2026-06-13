@@ -26,6 +26,7 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
   
   const recognitionRef = useRef(null);
   const isMounted = useRef(true);
+  const hasStartedRef = useRef(false);
 
   // Initialize Speech Capture API Link
   useEffect(() => {
@@ -52,15 +53,18 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
       recognitionRef.current = rec;
     }
 
-    // 🌟 REFRESH RESILIENCE LAYOUT: Only start a new session if we don't already have an active ID cached
     if (!localStorage.getItem('intervyo_active_id')) {
-      startVoiceSession();
-    } else {
-      // If we recovered a state, replay the question for the student
-      setTimeout(() => {
-        if (isMounted.current) speakText(localStorage.getItem('intervyo_current_question'));
-      }, 800);
+  if (!hasStartedRef.current) {
+    hasStartedRef.current = true;
+    startVoiceSession();
+  }
+} else {
+  setTimeout(() => {
+    if (isMounted.current) {
+      speakText(localStorage.getItem('intervyo_current_question'));
     }
+  }, 800);
+}
 
     return () => {
       isMounted.current = false;

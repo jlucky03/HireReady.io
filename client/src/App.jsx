@@ -100,6 +100,7 @@ if (user) {
   };
 
   const startInterviewHandler = (topic, difficulty) => {
+  
     setSessionTopic(topic);
     setSessionDifficulty(difficulty);
     setActiveView("voice_room");

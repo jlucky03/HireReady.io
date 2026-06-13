@@ -103,6 +103,7 @@ if (data.cached) {
   };
 
  const handleLaunchVoiceSession = () => {
+  console.log("🟢 Launch Interview button clicked");
   if (authUser?.credits < 3) {
     showToast("You need at least 3 credits to start an interview.");
     return;
