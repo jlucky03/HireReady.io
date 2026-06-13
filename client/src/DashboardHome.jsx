@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BuyCredits from "./BuyCredits";
 import {
   FileText,
   Volume2,
@@ -20,6 +21,7 @@ export default function DashboardHome({ onStartInterview, onViewReport, history 
   const [atsResult, setAtsResult] = useState(null);
   const [cachedResumeText, setCachedResumeText] = useState(""); 
   const [showHistoryModal, setShowHistoryModal] = useState(false); 
+  const [showBuyCredits, setShowBuyCredits] = useState(false);
 
   // Selection configurations
   const [selectedTopic, setSelectedTopic] = useState('MERN Stack');
@@ -176,6 +178,20 @@ const userAvatar =
       <History size={14} />
       History
     </button>
+
+    <button
+  onClick={() => setShowBuyCredits(true)}
+  className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-xl"
+>
+  Buy Credits
+</button>
+
+{showBuyCredits && (
+  <BuyCredits
+    onClose={() => setShowBuyCredits(false)}
+    showToast={showToast}
+  />
+)}
 
   </div>
 </div>
