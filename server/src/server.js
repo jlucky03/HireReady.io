@@ -2,7 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
 import mongoose from 'mongoose';
-import paymentRoutes from './routes/paymentRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js'
+import { connectRedis } from "./config/redis.js";
 import cors from 'cors';
 
 import authRoutes from './routes/authRoutes.js';
@@ -26,12 +27,14 @@ app.get('/', (req, res) => {
   res.send('Intervyo.ai Core System API is online...');
 });
 
+
 // Establish Core Database Connection Engine exactly as originally structured
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/intervyo';
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log('🚀 Database connection established successfully!'))
   .catch((err) => console.error('❌ Database connection error:', err));
+connectRedis();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
