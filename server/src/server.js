@@ -10,7 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
 import oaRoutes from './routes/oaRoutes.js';
-
+import { connectRabbitMQ } from "./config/rabbitmq.js";
 const app = express();
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -35,6 +35,7 @@ mongoose
   .then(() => console.log('🚀 Database connection established successfully!'))
   .catch((err) => console.error('❌ Database connection error:', err));
 connectRedis();
+connectRabbitMQ();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

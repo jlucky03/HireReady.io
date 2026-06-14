@@ -1,5 +1,6 @@
 import Groq from 'groq-sdk';
 import Interview from '../models/Interview.js';
+import { publishEvaluationJob } from "../config/rabbitmq.js";
 
 let groqInstance = null;
 const getGroqClient = () => {
@@ -102,89 +103,22 @@ export const submitAnswer = async (req, res) => {
     const activeIndex = sessionDoc.questions.length - 1;
     sessionDoc.questions[activeIndex].answer = answer || "";
 
-    // ROUND 5: FINALIZE COMPREHENSIVE RECRUITER REPORT VIEW
-    if (sessionDoc.questions.length >= 5) {
-      sessionDoc.isFinished = true;
-      
-      let transcriptSummary = '';
-      sessionDoc.questions.forEach((q, idx) => {
-        transcriptSummary += `Round ${idx + 1}:\nQuestion Asked: "${q.question}"\nCandidate Answer: "${q.answer}"\n\n`;
-      });
+  if (sessionDoc.questions.length >= 5) {
+  sessionDoc.isFinished = false;
+  sessionDoc.status = "evaluating";
+  await sessionDoc.save();
 
-      const structuralReportPrompt = `You are a Principal Engineering Lead grading a candidate's verbal technical screening transcript.
-      Analyze each question and answer transcript block. Provide structured feedback, an absolute ideal expert response sample, an overall score, and a high-level feedback summary.
-      
-      Transcript Registry to Grade:
-      ---
-      ${transcriptSummary}
-      ---
-      
-      CRITICAL COMPLETION RULE: Respond ONLY with a valid JSON object matching the schema below. Do not include markdown backticks or commentary text.
+  await publishEvaluationJob({
+    interviewId: sessionDoc._id.toString(),
+    userId: req.user._id.toString(),
+  });
 
-      Target Output JSON Schema:
-      {
-        "score": 85,
-        "overallFeedback": "Provide an high-level structural breakdown of their coding logic patterns and delivery confidence omissions.",
-        "questions": [
-          { "idealAnswer": "Ideal conceptual response text for question 1.", "feedback": "Detailed feedback text for answer 1." },
-          { "idealAnswer": "Ideal conceptual response text for question 2.", "feedback": "Detailed feedback text for answer 2." },
-          { "idealAnswer": "Ideal conceptual response text for question 3.", "feedback": "Detailed feedback text for answer 3." },
-          { "idealAnswer": "Ideal conceptual response text for question 4.", "feedback": "Detailed feedback text for answer 4." },
-          { "idealAnswer": "Ideal conceptual response text for question 5.", "feedback": "Detailed feedback text for answer 5." }
-        ]
-      }`;
-
-      const groq = getGroqClient();
-      const completionResult = await groq.chat.completions.create({
-        messages: [{ role: 'system', content: structuralReportPrompt }],
-        model: 'llama-3.1-8b-instant',
-        response_format: { type: 'json_object' }
-      });
-
-      let assessmentPayload;
-      try {
-        let rawJsonText = completionResult.choices[0].message.content.trim();
-        
-        // 🌟 FIXED STRATEGY: Locate JSON boundaries using braces to bypass linter split failures completely
-        const firstBrace = rawJsonText.indexOf('{');
-        const lastBrace = rawJsonText.lastIndexOf('}');
-        
-        if (firstBrace !== -1 && lastBrace !== -1) {
-          rawJsonText = rawJsonText.substring(firstBrace, lastBrace + 1);
-        }
-        
-        assessmentPayload = JSON.parse(rawJsonText);
-      } catch (err) {
-        console.error("JSON Evaluation String Parsing Error, using fallback:", err);
-        assessmentPayload = {
-          score: 72,
-          overallFeedback: "Evaluation logs aggregated successfully. Review down-level question components below.",
-          questions: Array(5).fill({
-            idealAnswer: "Explain concepts clearly using design patterns, tradeoffs, and framework internals.",
-            feedback: "Candidate answer tracks basic paradigms but lacks structural keyword delivery markers."
-          })
-        };
-      }
-
-      sessionDoc.score = assessmentPayload.score || 70;
-      sessionDoc.overallFeedback = assessmentPayload.overallFeedback || "";
-      
-      for (let i = 0; i < 5; i++) {
-        if (sessionDoc.questions[i] && assessmentPayload.questions?.[i]) {
-          sessionDoc.questions[i].idealAnswer = assessmentPayload.questions[i].idealAnswer || "";
-          sessionDoc.questions[i].feedback = assessmentPayload.questions[i].feedback || "";
-        }
-      }
-
-      await sessionDoc.save();
-
-      return res.status(200).json({
-        status: 'completed',
-        message: 'Evaluation calculations ready.',
-        interviewData: sessionDoc
-      });
-    }
-
+  return res.status(202).json({
+    status: "evaluating",
+    message: "Final evaluation is being generated.",
+    interviewId: sessionDoc._id,
+  });
+}
     // GENERATE NEXT SEQUENTIAL CONCEPTS QUESTION (Rounds 1 - 4)
     const prompt = `You are a strict technical recruiter conducting a live voice interview. Review the question asked and the candidate's verbal reply:
     Current Question: "${sessionDoc.questions[activeIndex].question}"
@@ -225,6 +159,23 @@ export const getInterviewHistory = async (req, res) => {
   try {
     const logs = await Interview.find({ user: req.user?._id }).sort({ createdAt: -1 });
     res.status(200).json(logs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getInterviewById = async (req, res) => {
+  try {
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      user: req.user?._id,
+    });
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    res.status(200).json(interview);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

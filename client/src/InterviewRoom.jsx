@@ -182,14 +182,36 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
         throw new Error(data.message || "Pipeline submission rejection.");
       }
 
-      if (data.status === 'completed' || currentStep >= 5) {
-        clearSessionStorage(); // Clear state logs since assessment is complete!
-        if (onFinished && data.interviewData) {
-          onFinished(data.interviewData); 
-        } else {
-          onExit();
-        }
-      } else {
+if (data.status === "evaluating") {
+  clearSessionStorage();
+
+  if (onFinished) {
+    onFinished({
+      _id: data.interviewId,
+      status: "evaluating",
+      isFinished: false,
+      score: null,
+      overallFeedback: "Your AI evaluation report is being generated...",
+    });
+  }
+
+  return;
+}
+
+if (data.status === "completed" || currentStep >= 5) {
+  clearSessionStorage();
+
+  if (onFinished && data.interviewData) {
+    onFinished(data.interviewData);
+  } else {
+    setNetworkError("Evaluation is processing. Please check History shortly.");
+    setTimeout(() => {
+      onExit();
+    }, 2500);
+  }
+
+  return;
+} else {
         const nextPrompt = data.nextQuestion || "Can you elaborate further on the architectural tradeoffs of your decision?";
         const nextStepNum = data.currentStep || (currentStep + 1);
         
@@ -246,7 +268,7 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
       {/* INTERVIEW TILES SPLIT */}
       <div className="max-w-5xl w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 my-auto py-6">
         
-        <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden shadow-2xl min-h-[340px]">
+        <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden shadow-2xl min-h-[300px]">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500" />
           <div className="space-y-4">
             <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 flex items-center gap-1.5 select-none">
@@ -273,7 +295,7 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
           </div>
         </div>
 
-        <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between shadow-2xl min-h-[340px]">
+        <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between shadow-2xl min-h-[300px]">
           <div className="w-full space-y-4">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 select-none block">
               Audio Telemetry Stream Capture
@@ -298,36 +320,31 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
             </div>
           </div>
 
-          <div className="w-full flex-1 flex flex-col justify-end mt-4">
-            <div className="w-full bg-[#0B0F19] border border-gray-800 rounded-xl p-4 h-[120px] overflow-y-auto text-left text-xs leading-relaxed font-mono text-gray-300 select-text">
-              {transcript ? (
-                <span className="text-white">{transcript}</span>
-              ) : (
-                <span className="text-gray-600 italic flex items-center gap-1.5 select-none">
-                  <User size={13} /> Voice capture stream is empty. Tap the mic above to answer via speech. Typing is disabled for this session.
-                </span>
-              )}
-            </div>
+          <textarea
+  value={transcript}
+  onChange={(e) => setTranscript(e.target.value)}
+  placeholder="Type your answer here if microphone is not working..."
+  className="w-full bg-[#0B0F19] border border-gray-800 rounded-xl p-4 h-[80px] text-left text-xs leading-relaxed font-mono text-gray-300 resize-none outline-none focus:border-purple-500"
+/>
 
-            <button
-              type="button"
-              onClick={handleSubmitVoiceAnswer}
-              disabled={submitting || !transcript.trim() || isRecording}
-              className="w-full mt-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer select-none"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 size={13} className="animate-spin" />
-                  Streaming Verbal Analytics...
-                </>
-              ) : (
-                <>
-                  Submit Voice Answer Block
-                  <ArrowRight size={13} />
-                </>
-              )}
-            </button>
-          </div>
+<button
+  type="button"
+  onClick={handleSubmitVoiceAnswer}
+  disabled={submitting || !transcript.trim() || isRecording}
+  className="w-full mt-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer select-none"
+>
+  {submitting ? (
+    <>
+      <Loader2 size={13} className="animate-spin" />
+      Streaming Verbal Analytics...
+    </>
+  ) : (
+    <>
+      Submit Voice Answer
+      <ArrowRight size={13} />
+    </>
+  )}
+</button>
 
         </div>
       </div>

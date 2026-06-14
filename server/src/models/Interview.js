@@ -14,8 +14,26 @@ const interviewSchema = new mongoose.Schema({
   questions: { type: [questionSchema], default: [] }, 
   currentStep: { type: Number, default: 1 },
   isFinished: { type: Boolean, default: false },
+  status: {
+  type: String,
+  enum: ["active", "evaluating", "completed", "failed"],
+  default: "active",
+},
   score: { type: Number, default: null },
-  overallFeedback: { type: String, default: "" } // 🌟 Added high level text area summaries
+  overallFeedback: { type: String, default: "" },
+   // 🌟 Added high level text area summaries
+   strengths: {
+  type: [String],
+  default: [],
+},
+weaknesses: {
+  type: [String],
+  default: [],
+},
+suggestions: {
+  type: [String],
+  default: [],
+},
 }, { timestamps: true });
 
 export default mongoose.model('Interview', interviewSchema);
