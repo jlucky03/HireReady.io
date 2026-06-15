@@ -16,7 +16,7 @@ import {
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
 
-export default function DashboardHome({ onStartInterview, onViewReport, history = [], showToast }) {
+export default function DashboardHome({ onStartInterview, onViewReport,onOpenProgress, history = [], showToast }) {
   const [file, setFile] = useState(null);
   const { user: authUser, setUser } = useAuthStore();
   const [loadingAts, setLoadingAts] = useState(false);
@@ -355,6 +355,13 @@ if (data.cached) {
           </div>
         )}
 
+        <button
+  onClick={onOpenProgress}
+  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold text-sm"
+>
+  My Progress
+</button>
+
         {/* HISTORICAL REGISTRY OVERLAY MODAL */}
         {showHistoryModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
@@ -405,6 +412,7 @@ if (data.cached) {
   >
     <ClipboardCheck size={12} /> View Report
   </button>
+
 ) : session.status === "evaluating" ? (
   <button
     onClick={() => {

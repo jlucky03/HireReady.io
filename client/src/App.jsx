@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
-
+import ProgressAnalytics from "./ProgressAnalytics";
 import AuthPage from "./AuthPage";
 import DashboardHome from "./DashboardHome";
 import InterviewRoom from "./InterviewRoom";
@@ -146,8 +146,13 @@ if (user) {
           onViewReport={handleDisplayEvaluationReport}
           history={historyLogs}
            showToast={showToast}
+           onOpenProgress={() => setActiveView("progress")}
         />
       )}
+
+      {activeView === "progress" && (
+  <ProgressAnalytics onBack={() => setActiveView("dashboard")} />
+)}
 
       {activeView === "voice_room" && (
         <InterviewRoom
