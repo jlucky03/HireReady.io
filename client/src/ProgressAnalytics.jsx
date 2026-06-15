@@ -85,20 +85,20 @@ export default function ProgressAnalytics({ onBack }) {
       icon: CheckCircle,
     },
     {
-      label: "Average Score",
-      value: `${analytics.averageScore}%`,
-      icon: TrendingUp,
-    },
-    {
-      label: "Best Score",
-      value: `${analytics.bestScore}%`,
-      icon: Trophy,
-    },
-    {
-      label: "Latest Score",
-      value: `${analytics.latestScore}%`,
-      icon: Target,
-    },
+  label: "Average Score",
+  value: analytics.completedInterviews > 0 ? `${analytics.averageScore}%` : "—",
+  icon: TrendingUp,
+},
+{
+  label: "Best Score",
+  value: analytics.completedInterviews > 0 ? `${analytics.bestScore}%` : "—",
+  icon: Trophy,
+},
+{
+  label: "Latest Score",
+  value: analytics.completedInterviews > 0 ? `${analytics.latestScore}%` : "—",
+  icon: Target,
+},
   ];
 
   return (
@@ -125,6 +125,13 @@ export default function ProgressAnalytics({ onBack }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {statCards.map((card) => {
             const Icon = card.icon;
+
+            const getStatusClass = (status) => {
+  if (status === "completed") return "bg-emerald-500/10 text-emerald-300";
+  if (status === "failed") return "bg-red-500/10 text-red-300";
+  if (status === "evaluating") return "bg-blue-500/10 text-blue-300";
+  return "bg-amber-500/10 text-amber-300";
+};
 
             return (
               <div
@@ -270,9 +277,13 @@ export default function ProgressAnalytics({ onBack }) {
                       {item.score !== null ? `${item.score}%` : "—"}
                     </td>
                     <td className="py-3">
-                      <span className="capitalize text-xs font-bold px-2 py-1 rounded-lg bg-slate-800 text-slate-300">
-                        {item.status}
-                      </span>
+                  <span
+  className={`capitalize text-xs font-bold px-2 py-1 rounded-lg ${getStatusClass(
+    item.status
+  )}`}
+>
+  {item.status}
+</span>
                     </td>
                     <td className="py-3 text-slate-400">{item.date}</td>
                   </tr>
