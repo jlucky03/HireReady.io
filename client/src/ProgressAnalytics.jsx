@@ -101,6 +101,13 @@ export default function ProgressAnalytics({ onBack }) {
 },
   ];
 
+  const getStatusClass = (status) => {
+  if (status === "completed") return "bg-emerald-500/10 text-emerald-300";
+  if (status === "failed") return "bg-red-500/10 text-red-300";
+  if (status === "evaluating") return "bg-blue-500/10 text-blue-300";
+  return "bg-amber-500/10 text-amber-300";
+};
+
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-6">
