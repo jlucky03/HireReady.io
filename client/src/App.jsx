@@ -8,6 +8,7 @@ import DashboardHome from "./DashboardHome";
 import InterviewRoom from "./InterviewRoom";
 import EvaluationReport from "./EvaluationReport";
 import CorporateGap from "./CorporateGap";
+import { apiUrl } from "./config/api";
 
 export default function App() {
 
@@ -44,7 +45,7 @@ useEffect(() => {
 if (user) {
   const token = await user.getIdToken();
 
-  await fetch("http://localhost:5000/api/auth/firebase-login", {
+  await fetch(apiUrl("/api/auth/firebase-login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -81,7 +82,7 @@ if (user) {
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
 
-      const response = await fetch("http://localhost:5000/api/interviews/history", {
+      const response = await fetch(apiUrl("/api/interviews/history"), {
         headers: { Authorization: `Bearer ${token}` },
       });
 

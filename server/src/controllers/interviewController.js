@@ -63,13 +63,14 @@ if (req.user.credits < 3) {
     const initialQuestion = chatCompletion.choices[0].message.content.trim();
 
     const newInterview = await Interview.create({
-      user: userId,
-      topic: topic.startsWith('RESUME_DATA_STREAM:') ? 'Personal Resume Screen' : topic,
-      difficulty: difficulty.toLowerCase(),
-      questions: [{ question: initialQuestion, answer: "" }],
-      currentStep: 1,
-      isFinished: false
-    });
+  user: userId,
+  topic: topic.startsWith('RESUME_DATA_STREAM:') ? 'Personal Resume Screen' : topic,
+  difficulty: difficulty.toLowerCase(),
+  questions: [{ question: initialQuestion, answer: "" }],
+  currentStep: 1,
+  isFinished: false,
+  status: "active",
+});
 
     req.user.credits -= 3;
 await req.user.save();
@@ -95,17 +96,57 @@ export const submitAnswer = async (req, res) => {
       return res.status(400).json({ message: 'Missing active interview reference ID parameter.' });
     }
 
-    const sessionDoc = await Interview.findOne({ _id: interviewId, user: req.user?._id });
-    if (!sessionDoc) {
-      return res.status(404).json({ message: 'Active interview record matrix not found.' });
-    }
+   const sessionDoc = await Interview.findOne({
+  _id: interviewId,
+  user: req.user?._id,
+});
 
-    const activeIndex = sessionDoc.questions.length - 1;
-    sessionDoc.questions[activeIndex].answer = answer || "";
+if (!sessionDoc) {
+  return res.status(404).json({
+    message: "Active interview record matrix not found.",
+  });
+}
 
-  if (sessionDoc.questions.length >= 5) {
+// Prevent duplicate 5th-answer submission loop
+if (sessionDoc.status === "evaluating") {
+  return res.status(202).json({
+    status: "evaluating",
+    message: "Final evaluation is already being generated.",
+    interviewId: sessionDoc._id,
+  });
+}
+
+if (sessionDoc.status === "completed") {
+  return res.status(200).json({
+    status: "completed",
+    message: "Interview is already completed.",
+    interviewId: sessionDoc._id,
+  });
+}
+
+if (sessionDoc.status === "failed") {
+  return res.status(409).json({
+    status: "failed",
+    message: "This interview evaluation failed. Please start a new interview.",
+    interviewId: sessionDoc._id,
+  });
+}
+
+const activeIndex = sessionDoc.questions.length - 1;
+
+if (activeIndex < 0) {
+  return res.status(400).json({
+    message: "No active question found for this interview.",
+  });
+}
+
+sessionDoc.questions[activeIndex].answer = answer || "";
+
+ if (sessionDoc.questions.length >= 5) {
   sessionDoc.isFinished = false;
   sessionDoc.status = "evaluating";
+  sessionDoc.currentStep = 6;
+
   await sessionDoc.save();
 
   await publishEvaluationJob({

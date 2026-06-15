@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import paymentRoutes from './routes/paymentRoutes.js'
 import { connectRedis } from "./config/redis.js";
 import cors from 'cors';
-
+import errorHandler from "./middleware/errorHandler.js";
 import authRoutes from './routes/authRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
@@ -22,10 +22,12 @@ app.use('/api/interviews', interviewRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/dsa', oaRoutes);
 app.use('/api/payments', paymentRoutes);
-
 app.get('/', (req, res) => {
   res.send('Intervyo.ai Core System API is online...');
 });
+app.use(errorHandler);
+
+
 
 
 // Establish Core Database Connection Engine exactly as originally structured

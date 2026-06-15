@@ -8,14 +8,11 @@ export default function PaymentHistory({ onClose }) {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch(
-          "http://localhost:5000/api/payments/history",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await fetch(apiUrl("/api/payments/history"), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         const data = await res.json();
         setPayments(data);

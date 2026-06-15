@@ -3,6 +3,11 @@ import { startInterview, submitAnswer, getInterviewHistory } from '../controller
 import { protect } from '../controllers/authController.js'; // 🌟 FIXED: Points to your official authController path!
 import { redisRateLimiter } from "../middleware/rateLimiter.js";
 import {getInterviewById} from "../controllers/interviewController.js";
+import { validate } from "../middleware/validate.js";
+import {
+  startInterviewSchema,
+  submitAnswerSchema,
+} from "../validators/interviewValidator.js";
 const router = Router();
 
 // Secure Voice Interview Loop Sequence Routes
@@ -15,9 +20,16 @@ router.post(
     windowSeconds: 60 * 60,
     message: "Interview start limit reached. Try again later.",
   }),
+  validate(startInterviewSchema),
   startInterview
 );
-router.post('/submit', protect, submitAnswer);
+
+router.post(
+  "/submit",
+  protect,
+  validate(submitAnswerSchema),
+  submitAnswer
+);
 router.get('/history', protect, getInterviewHistory);
 router.get("/:id", protect, getInterviewById);
 

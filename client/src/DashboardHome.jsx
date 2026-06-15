@@ -10,7 +10,8 @@ import {
   UserCheck,
   Cpu,
   ClipboardCheck,
-  Play
+  Play,
+  Loader2,
 } from "lucide-react";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
@@ -394,40 +395,54 @@ if (data.cached) {
                           </span>
                         </div>
 
-                        {session.isFinished ? (
-                          <button
-                            onClick={() => { setShowHistoryModal(false); onViewReport(session); }}
-                            className="bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600 hover:text-white text-purple-400 px-3 py-1.5 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
-                          >
-                            <ClipboardCheck size={12} /> View Report
-                          </button>
-                        ) : (
-                          <button
-                       onClick={() => {
-  setShowHistoryModal(false);
+                 {session.status === "completed" || session.isFinished ? (
+  <button
+    onClick={() => {
+      setShowHistoryModal(false);
+      onViewReport(session);
+    }}
+    className="bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600 hover:text-white text-purple-400 px-3 py-1.5 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
+  >
+    <ClipboardCheck size={12} /> View Report
+  </button>
+) : session.status === "evaluating" ? (
+  <button
+    onClick={() => {
+      setShowHistoryModal(false);
+      onViewReport(session);
+    }}
+    className="bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600 hover:text-white text-blue-400 px-3 py-1.5 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
+  >
+    <Loader2 size={12} className="animate-spin" /> View Evaluation
+  </button>
+) : session.status === "failed" ? (
+  <span className="text-red-400 text-[11px] font-bold uppercase">
+    Evaluation Failed
+  </span>
+) : (
+  <button
+    onClick={() => {
+      setShowHistoryModal(false);
 
-  localStorage.setItem('intervyo_active_id', session._id);
-  localStorage.setItem(
-    'intervyo_current_step',
-    (session.currentStep || session.questions.length || 1).toString()
-  );
+      localStorage.setItem("intervyo_active_id", session._id);
+      localStorage.setItem(
+        "intervyo_current_step",
+        (session.currentStep || session.questions.length || 1).toString()
+      );
 
-  const lastQuestion =
-    session.questions?.[session.questions.length - 1]?.question ||
-    "Resume interview question";
-localStorage.setItem(
-  'intervyo_current_question',
-  lastQuestion
-);
+      const lastQuestion =
+        session.questions?.[session.questions.length - 1]?.question ||
+        "Resume interview question";
 
-// Resume existing session (no extra credit deduction)
-onStartInterview(session.topic, session.difficulty);
-}}
-                            className="bg-amber-600/20 border border-amber-500/30 hover:bg-amber-600 hover:text-white text-amber-400 px-3 py-1.5 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
-                          >
-                            <Play size={12} className="fill-amber-400" /> Resume Room
-                          </button>
-                        )}
+      localStorage.setItem("intervyo_current_question", lastQuestion);
+
+      onStartInterview(session.topic, session.difficulty);
+    }}
+    className="bg-amber-600/20 border border-amber-500/30 hover:bg-amber-600 hover:text-white text-amber-400 px-3 py-1.5 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer"
+  >
+    <Play size={12} className="fill-amber-400" /> Resume Room
+  </button>
+)}
                       </div>
                     </div>
                   ))

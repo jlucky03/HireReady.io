@@ -17,4 +17,8 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+paymentSchema.index({ user: 1, createdAt: -1 });
+paymentSchema.index({ razorpayOrderId: 1 }, { unique: true });
+paymentSchema.index({ razorpayPaymentId: 1 }, { sparse: true });
+
 export default mongoose.model("Payment", paymentSchema);

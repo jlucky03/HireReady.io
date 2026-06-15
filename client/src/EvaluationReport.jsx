@@ -8,6 +8,7 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
+import { apiUrl } from "./config/api";
 
 export default function EvaluationReport({ report, onClose }) {
   const [liveReport, setLiveReport] = useState(report);
@@ -19,14 +20,11 @@ export default function EvaluationReport({ report, onClose }) {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch(
-          `http://localhost:5000/api/interviews/${liveReport._id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+   const res = await fetch(apiUrl(`/api/interviews/${liveReport._id}`), {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
         const data = await res.json();
 
