@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { apiUrl } from "./config/api";
 
 export default function PaymentHistory({ onClose }) {
   const [payments, setPayments] = useState([]);
