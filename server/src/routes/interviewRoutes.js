@@ -1,8 +1,13 @@
 import { Router } from 'express';
-import { startInterview, submitAnswer, getInterviewHistory } from '../controllers/interviewController.js';
+import {
+  startInterview,
+  submitAnswer,
+  getInterviewHistory,
+  getInterviewById,
+  getInterviewAnalytics,
+} from "../controllers/interviewController.js";
 import { protect } from '../controllers/authController.js'; // 🌟 FIXED: Points to your official authController path!
 import { redisRateLimiter } from "../middleware/rateLimiter.js";
-import {getInterviewById} from "../controllers/interviewController.js";
 import { validate } from "../middleware/validate.js";
 import {
   startInterviewSchema,
@@ -30,6 +35,7 @@ router.post(
   validate(submitAnswerSchema),
   submitAnswer
 );
+router.get("/analytics", protect, getInterviewAnalytics);
 router.get('/history', protect, getInterviewHistory);
 router.get("/:id", protect, getInterviewById);
 

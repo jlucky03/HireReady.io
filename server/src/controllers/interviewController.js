@@ -221,3 +221,119 @@ export const getInterviewById = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const getInterviewAnalytics = async (req, res) => {
+  try {
+    const interviews = await Interview.find({ user: req.user?._id })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const completed = interviews.filter(
+      (item) =>
+        (item.status === "completed" || item.isFinished) &&
+        typeof item.score === "number"
+    );
+
+    const failed = interviews.filter((item) => item.status === "failed");
+
+    const totalInterviews = interviews.length;
+    const completedInterviews = completed.length;
+    const failedInterviews = failed.length;
+
+    const averageScore =
+      completed.length > 0
+        ? Math.round(
+            completed.reduce((sum, item) => sum + item.score, 0) /
+              completed.length
+          )
+        : 0;
+
+    const bestScore =
+      completed.length > 0
+        ? Math.max(...completed.map((item) => item.score))
+        : 0;
+
+    const latestScore = completed.length > 0 ? completed[0].score : 0;
+
+  const progressOverTime = [...completed]
+  .reverse()
+  .map((item, index) => ({
+    id: item._id,
+    topic: item.topic,
+    score: item.score,
+    date: new Date(item.createdAt).toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+    }),
+    label: `Attempt ${index + 1}`,
+  }));
+
+    const topicMap = {};
+
+    completed.forEach((item) => {
+      const topic = item.topic || "General";
+
+      if (!topicMap[topic]) {
+        topicMap[topic] = {
+          topic,
+          totalScore: 0,
+          count: 0,
+        };
+      }
+
+      topicMap[topic].totalScore += item.score;
+      topicMap[topic].count += 1;
+    });
+
+    const topicPerformance = Object.values(topicMap)
+      .map((item) => ({
+        topic: item.topic,
+        averageScore: Math.round(item.totalScore / item.count),
+        attempts: item.count,
+      }))
+      .sort((a, b) => b.averageScore - a.averageScore);
+
+    const weakAreas = topicPerformance
+      .filter((item) => item.averageScore < 60)
+      .map((item) => ({
+        topic: item.topic,
+        averageScore: item.averageScore,
+        suggestion: `Focus more on ${item.topic} because your average score is below 60%.`,
+      }));
+
+  const recentInterviews = interviews.slice(0, 5).map((item) => {
+  const status = item.status || (item.isFinished ? "completed" : "active");
+
+  return {
+    id: item._id,
+    topic: item.topic,
+    difficulty: item.difficulty,
+    score:
+      status === "completed" && typeof item.score === "number"
+        ? item.score
+        : null,
+    status,
+    date: new Date(item.createdAt).toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }),
+  };
+});
+
+    res.status(200).json({
+      totalInterviews,
+      completedInterviews,
+      failedInterviews,
+      averageScore,
+      bestScore,
+      latestScore,
+      progressOverTime,
+      topicPerformance,
+      weakAreas,
+      recentInterviews,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
