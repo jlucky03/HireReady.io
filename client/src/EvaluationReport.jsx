@@ -139,16 +139,23 @@ export default function EvaluationReport({ report, onClose }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-5">
-            <h3 className="text-xs font-black uppercase text-emerald-400 mb-3">
-              Strengths
-            </h3>
-            <ul className="space-y-2 text-xs text-gray-300">
-              {(liveReport.strengths || []).map((x, i) => (
-                <li key={i}>✅ {x}</li>
-              ))}
-            </ul>
-          </div>
+         <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-5">
+  <h3 className="text-xs font-black uppercase text-emerald-400 mb-3">
+    Strengths
+  </h3>
+
+  {liveReport.strengths?.length > 0 ? (
+    <ul className="space-y-2 text-xs text-gray-300">
+      {liveReport.strengths.map((x, i) => (
+        <li key={i}>✅ {x}</li>
+      ))}
+    </ul>
+  ) : (
+    <p className="text-xs text-gray-500 italic leading-relaxed">
+      No clear strengths detected in this attempt.
+    </p>
+  )}
+</div>
 
           <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-5">
             <h3 className="text-xs font-black uppercase text-red-400 mb-3">

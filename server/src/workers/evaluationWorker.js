@@ -68,6 +68,30 @@ const normalizeScore = (score) => {
   return Math.max(0, Math.min(100, value));
 };
 
+const getAnswerStats = (questions = []) => {
+  const answers = questions.map((q) => String(q.answer || "").trim());
+
+  const nonEmptyAnswers = answers.filter((ans) => ans.length > 0);
+
+  const meaningfulAnswers = answers.filter((ans) => {
+    const words = ans
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const uniqueWords = new Set(words);
+
+    return ans.length >= 25 && words.length >= 5 && uniqueWords.size >= 4;
+  });
+
+  return {
+    total: answers.length,
+    nonEmpty: nonEmptyAnswers.length,
+    meaningful: meaningfulAnswers.length,
+  };
+};
+
 const evaluateInterview = async (interviewId) => {
   if (!mongoose.isValidObjectId(interviewId)) {
     throw new Error("Invalid interviewId in evaluation job");
@@ -84,30 +108,53 @@ const evaluateInterview = async (interviewId) => {
     return;
   }
 
-  const qaText = interview.questions
-    .map((q, idx) => {
-      const question = truncateText(q.question, 800);
-      const answer = truncateText(q.answer || "No answer", 1200);
+ const qaText = interview.questions
+  .map((q, idx) => {
+    const question = truncateText(q.question, 800);
+    const answer = truncateText(q.answer || "No answer", 1200);
 
-      return `Q${idx + 1}: ${question}\nA${idx + 1}: ${answer}`;
-    })
-    .join("\n\n");
+    return `Q${idx + 1}: ${question}\nA${idx + 1}: ${answer}`;
+  })
+  .join("\n\n");
 
-  const prompt = `You are a senior technical interviewer.
+const answerStats = getAnswerStats(interview.questions);
 
-Evaluate this 5-question mock interview.
+const prompt = `You are a strict senior technical interviewer.
+
+Evaluate this 5-question mock interview very honestly.
 
 Interview Topic: ${truncateText(interview.topic, 100)}
 Difficulty: ${interview.difficulty}
 
+Candidate answer quality stats:
+- Total questions: ${answerStats.total}
+- Non-empty answers: ${answerStats.nonEmpty}
+- Meaningful answers: ${answerStats.meaningful}
+
 Questions and Answers:
 ${qaText}
 
+Strict scoring rubric:
+0-10: Blank answers, random words, copied text, nonsense, or no technical understanding.
+11-25: Mostly irrelevant, incoherent, very short, or does not answer the questions.
+26-40: Weak answers with only a few related keywords but no clear explanation.
+41-60: Basic partial understanding with missing depth and examples.
+61-80: Good understanding with mostly correct explanations and some examples.
+81-100: Strong interview-ready answers with depth, tradeoffs, examples, and clarity.
+
+Important rules:
+- Do NOT give marks for simply completing all questions.
+- If answers are incoherent or unrelated, score must be below 25.
+- If most answers are very short or meaningless, score must be below 30.
+- If the candidate gives no real technical explanation, score must be below 20.
+- Strengths can be an empty array if there are no real strengths.
+- Be strict, realistic, and interview-focused.
+
 Return ONLY valid JSON in this exact schema:
 {
-  "score": 75,
+  "score": 18,
   "summary": "Short overall evaluation summary.",
-  "strengths": ["strength 1", "strength 2"],
+  "strengths": [],
   "weaknesses": ["weakness 1", "weakness 2"],
   "suggestions": ["suggestion 1", "suggestion 2"]
 }`;
@@ -126,7 +173,18 @@ Return ONLY valid JSON in this exact schema:
   const raw = completion?.choices?.[0]?.message?.content || "";
   const report = parseJsonStrict(raw);
 
-  interview.score = normalizeScore(report.score);
+  let finalScore = normalizeScore(report.score);
+
+// Backend safety clamp for garbage / meaningless answers
+if (answerStats.meaningful === 0) {
+  finalScore = Math.min(finalScore, 15);
+} else if (answerStats.meaningful <= 1) {
+  finalScore = Math.min(finalScore, 25);
+} else if (answerStats.meaningful <= 2) {
+  finalScore = Math.min(finalScore, 40);
+}
+
+interview.score = finalScore;
   interview.overallFeedback =
     report.summary || "Evaluation completed successfully.";
 

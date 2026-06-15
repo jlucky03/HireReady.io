@@ -1,21 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, ArrowRight, Loader2, MessageSquare, User, Headphones, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  ArrowRight,
+  Loader2,
+  MessageSquare,
+  Headphones,
+  AlertTriangle,
+  ShieldCheck,
+  Radio,
+} from "lucide-react";
 import { useAuthStore } from "./store/authStore";
+import { apiUrl } from "./config/api";
 
 export default function InterviewRoom({ topic, difficulty, onExit, onFinished }) {
-  // 🌟 READ PERSISTENT STATE ON MOUNT: Check if there's a cached state from a previous refresh
   const { user: authUser, setUser } = useAuthStore();
+
   const [currentStep, setCurrentStep] = useState(() => {
-    const savedStep = localStorage.getItem('intervyo_current_step');
+    const savedStep = localStorage.getItem("intervyo_current_step");
     return savedStep ? parseInt(savedStep, 10) : 1;
   });
 
   const [question, setQuestion] = useState(() => {
-    return localStorage.getItem('intervyo_current_question') || "Initializing your secure voice channel matrix...";
+    return (
+      localStorage.getItem("intervyo_current_question") ||
+      "Initializing your secure voice interview..."
+    );
   });
 
   const [activeId, setActiveId] = useState(() => {
-    return localStorage.getItem('intervyo_active_id') || null;
+    return localStorage.getItem("intervyo_active_id") || null;
   });
 
   const [transcript, setTranscript] = useState("");
@@ -23,114 +38,163 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
   const [submitting, setSubmitting] = useState(false);
   const [aiSpeaking, setAiSpeaking] = useState(false);
   const [networkError, setNetworkError] = useState("");
-  
+
   const recognitionRef = useRef(null);
   const isMounted = useRef(true);
   const hasStartedRef = useRef(false);
 
-  // Initialize Speech Capture API Link
   useEffect(() => {
     isMounted.current = true;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
       rec.continuous = true;
       rec.interimResults = true;
-      rec.lang = 'en-US';
+      rec.lang = "en-US";
 
       rec.onresult = (event) => {
         let currentResult = "";
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           currentResult += event.results[i][0].transcript;
         }
-        if (isMounted.current) setTranscript(currentResult);
+
+        if (isMounted.current) {
+          setTranscript(currentResult);
+        }
       };
 
-      rec.onerror = (e) => console.error("Speech Recognition Link Error:", e.error);
-      rec.onend = () => {
-        if (isMounted.current) setIsRecording(false);
+      rec.onerror = (e) => {
+        console.error("Speech Recognition Error:", e.error);
       };
+
+      rec.onend = () => {
+        if (isMounted.current) {
+          setIsRecording(false);
+        }
+      };
+
       recognitionRef.current = rec;
     }
 
-    if (!localStorage.getItem('intervyo_active_id')) {
-  if (!hasStartedRef.current) {
-    hasStartedRef.current = true;
-    startVoiceSession();
-  }
-} else {
-  setTimeout(() => {
-    if (isMounted.current) {
-      speakText(localStorage.getItem('intervyo_current_question'));
+    if (!localStorage.getItem("intervyo_active_id")) {
+      if (!hasStartedRef.current) {
+        hasStartedRef.current = true;
+        startVoiceSession();
+      }
+    } else {
+      setTimeout(() => {
+        if (isMounted.current) {
+          speakText(localStorage.getItem("intervyo_current_question"));
+        }
+      }, 800);
     }
-  }, 800);
-}
 
     return () => {
       isMounted.current = false;
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // ignore stop errors
+        }
+      }
+
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
-  // 🌟 SYNCHRONIZE CACHE STATE LOGS: Keep localStorage updated whenever values shift
   useEffect(() => {
-    if (activeId) localStorage.setItem('intervyo_active_id', activeId);
-    localStorage.setItem('intervyo_current_step', currentStep.toString());
-    localStorage.setItem('intervyo_current_question', question);
+    if (activeId) {
+      localStorage.setItem("intervyo_active_id", activeId);
+    }
+
+    localStorage.setItem("intervyo_current_step", currentStep.toString());
+    localStorage.setItem("intervyo_current_question", question);
   }, [activeId, currentStep, question]);
 
   const startVoiceSession = async () => {
     setNetworkError("");
+
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/interviews/start', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(apiUrl("/api/interviews/start"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ topic, difficulty })
+        body: JSON.stringify({ topic, difficulty }),
       });
+
       const data = await response.json();
-      
+
       if (!isMounted.current) return;
 
       if (response.ok && data.question) {
         if (typeof data.remainingCredits === "number") {
-  setUser({ ...authUser, credits: data.remainingCredits });
-}
+          setUser({
+            ...authUser,
+            credits: data.remainingCredits,
+          });
+        }
+
         setActiveId(data.interviewId);
         setQuestion(data.question);
         speakText(data.question);
       } else {
-        throw new Error(data.message || "Failed to initialize active screening session.");
+        throw new Error(
+          data.message || "Failed to initialize interview session."
+        );
       }
-   } catch (err) {
-  if (isMounted.current) {
-    setNetworkError(err.message || "Failed to start session.");
-    setQuestion("Unable to start interview session.");
-  }
-}
+    } catch (err) {
+      if (isMounted.current) {
+        setNetworkError(err.message || "Failed to start session.");
+        setQuestion("Unable to start interview session.");
+      }
+    }
   };
 
   const speakText = (text) => {
     if (!window.speechSynthesis || !text) return;
+
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onstart = () => { if (isMounted.current) setAiSpeaking(true); };
-    utterance.onend = () => { if (isMounted.current) setAiSpeaking(false); };
-    
+
+    utterance.onstart = () => {
+      if (isMounted.current) {
+        setAiSpeaking(true);
+      }
+    };
+
+    utterance.onend = () => {
+      if (isMounted.current) {
+        setAiSpeaking(false);
+      }
+    };
+
     const voices = window.speechSynthesis.getVoices();
-    const cleanVoice = voices.find(v => v.lang.includes('en-US')) || voices[0];
-    if (cleanVoice) utterance.voice = cleanVoice;
-    
+    const cleanVoice =
+      voices.find((v) => v.lang.includes("en-US")) || voices[0];
+
+    if (cleanVoice) {
+      utterance.voice = cleanVoice;
+    }
+
     window.speechSynthesis.speak(utterance);
   };
 
   const toggleVoiceCapture = () => {
     if (!recognitionRef.current) {
-      alert("Platform Warning: Microphones require standard Google Chrome or Edge engines.");
+      alert("Microphone requires Google Chrome or Microsoft Edge.");
       return;
     }
 
@@ -139,6 +203,7 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
     } else {
       setTranscript("");
       setIsRecording(true);
+
       try {
         recognitionRef.current.start();
       } catch (err) {
@@ -147,210 +212,301 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
     }
   };
 
-  // 🌟 CLEAN STORAGE SHUTDOWN HELPER
   const clearSessionStorage = () => {
-    localStorage.removeItem('intervyo_active_id');
-    localStorage.removeItem('intervyo_current_step');
-    localStorage.removeItem('intervyo_current_question');
-    localStorage.removeItem('intervyo_active_topic');
-    localStorage.removeItem('intervyo_active_difficulty');
+    localStorage.removeItem("intervyo_active_id");
+    localStorage.removeItem("intervyo_current_step");
+    localStorage.removeItem("intervyo_current_question");
+    localStorage.removeItem("intervyo_active_topic");
+    localStorage.removeItem("intervyo_active_difficulty");
   };
 
   const handleSubmitVoiceAnswer = async () => {
     if (!transcript.trim() || isRecording) return;
+
     setSubmitting(true);
     setNetworkError("");
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/interviews/submit', {
-        method: 'POST',
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(apiUrl("/api/interviews/submit"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          answer: transcript, 
-          interviewId: activeId 
-        })
+        body: JSON.stringify({
+          answer: transcript,
+          interviewId: activeId,
+        }),
       });
-      
+
       const data = await response.json();
+
       if (!isMounted.current) return;
 
       if (!response.ok) {
-        throw new Error(data.message || "Pipeline submission rejection.");
+        throw new Error(data.message || "Answer submission failed.");
       }
 
-if (data.status === "evaluating") {
-  clearSessionStorage();
+      if (data.status === "evaluating") {
+        clearSessionStorage();
 
-  if (onFinished) {
-    onFinished({
-      _id: data.interviewId,
-      status: "evaluating",
-      isFinished: false,
-      score: null,
-      overallFeedback: "Your AI evaluation report is being generated...",
-    });
-  }
+        if (onFinished) {
+          onFinished({
+            _id: data.interviewId,
+            status: "evaluating",
+            isFinished: false,
+            score: null,
+            overallFeedback: "Your AI evaluation report is being generated...",
+          });
+        }
 
-  return;
-}
-
-if (data.status === "completed" || currentStep >= 5) {
-  clearSessionStorage();
-
-  if (onFinished && data.interviewData) {
-    onFinished(data.interviewData);
-  } else {
-    setNetworkError("Evaluation is processing. Please check History shortly.");
-    setTimeout(() => {
-      onExit();
-    }, 2500);
-  }
-
-  return;
-} else {
-        const nextPrompt = data.nextQuestion || "Can you elaborate further on the architectural tradeoffs of your decision?";
-        const nextStepNum = data.currentStep || (currentStep + 1);
-        
-        setQuestion(nextPrompt);
-        setCurrentStep(nextStepNum);
-        setTranscript("");
-        
-        setTimeout(() => speakText(nextPrompt), 100);
+        return;
       }
+
+      if (data.status === "completed" || currentStep >= 5) {
+        clearSessionStorage();
+
+        if (onFinished && data.interviewData) {
+          onFinished(data.interviewData);
+        } else {
+          setNetworkError("Evaluation is processing. Please check History shortly.");
+
+          setTimeout(() => {
+            onExit();
+          }, 2500);
+        }
+
+        return;
+      }
+
+      const nextPrompt =
+        data.nextQuestion ||
+        "Can you elaborate further on the architectural tradeoffs of your decision?";
+
+      const nextStepNum = data.currentStep || currentStep + 1;
+
+      setQuestion(nextPrompt);
+      setCurrentStep(nextStepNum);
+      setTranscript("");
+
+      setTimeout(() => speakText(nextPrompt), 100);
     } catch (err) {
       if (isMounted.current) {
-        setNetworkError(err.message || "Network transmission error. Retrying recommended.");
+        setNetworkError(
+          err.message || "Network transmission error. Please try again."
+        );
       }
     } finally {
-      if (isMounted.current) setSubmitting(false);
+      if (isMounted.current) {
+        setSubmitting(false);
+      }
     }
   };
 
   const handleCustomExit = () => {
-    clearSessionStorage(); // Clear cached session when explicitly hitting exit
+    clearSessionStorage();
     onExit();
   };
 
+  const progressPct = Math.min((currentStep / 5) * 100, 100);
+
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-gray-100 p-6 md:p-12 overflow-y-auto flex flex-col justify-between font-sans relative">
-      
-      {/* HEADER BAR PANEL */}
-      <div className="max-w-5xl w-full mx-auto flex justify-between items-center border-b border-gray-800/60 pb-4 select-none">
-        <div className="flex items-center gap-3">
-          <div className="bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-xl text-xs font-mono font-bold tracking-wider text-purple-400 uppercase flex items-center gap-1.5">
-            <Headphones size={12} /> Live Voice Board
-          </div>
-          <span className="text-xs font-mono text-gray-500 font-bold tracking-widest uppercase bg-[#151D30] px-2.5 py-1 rounded-lg border border-gray-800">
-            Question {currentStep} / 5
-          </span>
-        </div>
-        
-        <button 
-          onClick={handleCustomExit} 
-          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider px-3.5 py-2 rounded-xl border border-red-500/20 transition-all cursor-pointer"
-        >
-          Exit Room
-        </button>
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-y-auto flex flex-col">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-indigo-600/20 blur-[120px]" />
+        <div className="absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-purple-600/20 blur-[120px]" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-indigo-500/10 blur-[120px]" />
       </div>
 
-      {/* ERROR BANNER NOTIFICATION */}
-      {networkError && (
-        <div className="max-w-5xl w-full mx-auto mt-4 bg-red-500/10 border border-red-500/20 p-3.5 rounded-xl flex items-center gap-2.5 text-xs text-red-400 animate-fade-in">
-          <AlertTriangle size={15} />
-          <span>{networkError}</span>
-        </div>
-      )}
+      <div className="relative z-10 flex flex-col flex-1 px-4 py-6 sm:px-6 md:px-10 md:py-10">
+        <header className="mx-auto w-full max-w-5xl">
+          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-purple-900/40">
+                <Headphones size={20} className="text-white" />
+              </div>
 
-      {/* INTERVIEW TILES SPLIT */}
-      <div className="max-w-5xl w-full mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 my-auto py-6">
-        
-        <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden shadow-2xl min-h-[300px]">
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500" />
-          <div className="space-y-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-purple-400 flex items-center gap-1.5 select-none">
-              <MessageSquare size={12} /> AI Screener Audio Directive
-            </span>
-            <h2 className="text-xl md:text-2xl font-extrabold text-white leading-relaxed tracking-tight select-text">
-              "{question}"
-            </h2>
-          </div>
-          
-          <div className="mt-8 flex items-center justify-between text-xs text-gray-400 bg-[#0B0F19]/60 p-3.5 border border-gray-800/60 rounded-xl select-none">
-            <div className="flex items-center gap-2">
-              <Volume2 size={14} className={aiSpeaking ? "text-purple-400 animate-pulse" : "text-gray-600"} />
-              <span className="font-medium">{aiSpeaking ? "Voice Assistant is speaking..." : "Assistant idle. Dictate your response."}</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm font-bold tracking-tight text-white">
+                    Live Voice Interview
+                  </h1>
+
+                  <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                    Live
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-400">
+                  {topic ? `${topic}` : "Adaptive screening"}
+                  {difficulty ? ` · ${difficulty}` : ""}
+                </p>
+              </div>
             </div>
-            {!aiSpeaking && (
-              <button 
-                onClick={() => speakText(question)} 
-                className="text-[9px] text-purple-400 hover:text-purple-300 font-bold uppercase tracking-widest bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20 cursor-pointer"
-              >
-                Replay Audio
-              </button>
-            )}
-          </div>
-        </div>
 
-        <div className="bg-[#151D30]/60 border border-gray-800 rounded-2xl p-6 flex flex-col justify-between shadow-2xl min-h-[300px]">
-          <div className="w-full space-y-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 select-none block">
-              Audio Telemetry Stream Capture
-            </span>
-            
-            <div className="relative py-4 flex items-center justify-center select-none">
-              {isRecording && (
-                <div className="absolute w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 animate-ping" />
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  Question
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {currentStep} <span className="text-slate-500">/ 5</span>
+                </span>
+              </div>
+
+              <button
+                onClick={handleCustomExit}
+                className="cursor-pointer rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-400 transition-all hover:bg-red-500/20"
+              >
+                Exit Room
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </header>
+
+        {networkError && (
+          <div className="mx-auto mt-4 flex w-full max-w-5xl items-center gap-2.5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-300 backdrop-blur-xl">
+            <AlertTriangle size={16} className="shrink-0" />
+            <span>{networkError}</span>
+          </div>
+        )}
+
+        <main className="mx-auto my-auto grid w-full max-w-5xl grid-cols-1 gap-6 py-8 md:grid-cols-2 md:gap-8">
+          <section className="relative flex min-h-[320px] flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+
+            <div className="space-y-5">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-300">
+                  <MessageSquare size={15} />
+                </span>
+
+                <span className="text-[11px] font-bold uppercase tracking-widest text-indigo-300">
+                  AI Interviewer
+                </span>
+              </div>
+
+              <h2 className="text-pretty text-xl font-bold leading-relaxed tracking-tight text-white sm:text-2xl">
+                “{question}”
+              </h2>
+            </div>
+
+            <div className="mt-8 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/50 p-3.5">
+              <div className="flex items-center gap-2 text-xs text-slate-300">
+                <Volume2
+                  size={16}
+                  className={
+                    aiSpeaking
+                      ? "text-indigo-400 animate-pulse"
+                      : "text-slate-600"
+                  }
+                />
+                <span className="font-medium">
+                  {aiSpeaking
+                    ? "Assistant is speaking..."
+                    : "Assistant idle · answer when ready"}
+                </span>
+              </div>
+
+              {!aiSpeaking && (
+                <button
+                  onClick={() => speakText(question)}
+                  className="cursor-pointer rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-300 transition-colors hover:bg-indigo-500/20"
+                >
+                  Replay
+                </button>
               )}
+            </div>
+          </section>
+
+          <section className="flex min-h-[320px] flex-col justify-between rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl sm:p-7">
+            <div className="w-full space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/15 text-purple-300">
+                  <Radio size={15} />
+                </span>
+
+                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                  Your Response
+                </span>
+              </div>
+
+              <div className="relative flex items-center justify-center py-5">
+                {isRecording && (
+                  <>
+                    <span className="absolute h-24 w-24 animate-ping rounded-full bg-red-500/20" />
+                    <span className="absolute h-20 w-20 animate-pulse rounded-full bg-red-500/10" />
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={toggleVoiceCapture}
+                  disabled={submitting || aiSpeaking}
+                  aria-label={isRecording ? "Stop recording" : "Start recording"}
+                  className={`relative z-10 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border shadow-xl transition-all disabled:cursor-not-allowed disabled:opacity-30 ${
+                    isRecording
+                      ? "border-red-400 bg-red-600 text-white hover:bg-red-500"
+                      : "border-white/10 bg-gradient-to-br from-indigo-500 to-purple-600 text-white hover:shadow-purple-900/40"
+                  }`}
+                >
+                  {isRecording ? <MicOff size={26} /> : <Mic size={26} />}
+                </button>
+              </div>
+
+              <p className="text-center text-xs font-medium text-slate-400">
+                {isRecording
+                  ? "Listening... tap to stop"
+                  : "Tap the mic to start speaking"}
+              </p>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <textarea
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
+                placeholder="Type your answer here if the microphone is not working..."
+                className="h-24 w-full resize-none rounded-xl border border-white/10 bg-slate-950/60 p-4 text-sm leading-relaxed text-slate-200 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
+
               <button
                 type="button"
-                onClick={toggleVoiceCapture}
-                disabled={submitting || aiSpeaking}
-                className={`w-16 h-16 rounded-full flex items-center justify-center border transition-all shadow-xl cursor-pointer relative z-10 ${
-                  isRecording 
-                    ? 'bg-red-600 border-red-500 hover:bg-red-500 text-white' 
-                    : 'bg-[#0B0F19] border-gray-800 hover:border-purple-500/40 text-gray-400 hover:text-purple-400 disabled:opacity-30'
-                }`}
+                onClick={handleSubmitVoiceAnswer}
+                disabled={submitting || !transcript.trim() || isRecording}
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-900/30 transition-all hover:from-indigo-400 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {isRecording ? <MicOff size={22} /> : <Mic size={22} />}
+                {submitting ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Analyzing response...
+                  </>
+                ) : (
+                  <>
+                    Submit Answer
+                    <ArrowRight size={15} />
+                  </>
+                )}
               </button>
             </div>
-          </div>
+          </section>
+        </main>
 
-          <textarea
-  value={transcript}
-  onChange={(e) => setTranscript(e.target.value)}
-  placeholder="Type your answer here if microphone is not working..."
-  className="w-full bg-[#0B0F19] border border-gray-800 rounded-xl p-4 h-[80px] text-left text-xs leading-relaxed font-mono text-gray-300 resize-none outline-none focus:border-purple-500"
-/>
-
-<button
-  type="button"
-  onClick={handleSubmitVoiceAnswer}
-  disabled={submitting || !transcript.trim() || isRecording}
-  className="w-full mt-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white text-[11px] font-bold uppercase tracking-wider py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer select-none"
->
-  {submitting ? (
-    <>
-      <Loader2 size={13} className="animate-spin" />
-      Streaming Verbal Analytics...
-    </>
-  ) : (
-    <>
-      Submit Voice Answer
-      <ArrowRight size={13} />
-    </>
-  )}
-</button>
-
-        </div>
-      </div>
-
-      <div className="max-w-5xl w-full mx-auto text-center text-[10px] text-gray-600 border-t border-gray-800/40 pt-4 select-none">
-        🔒 Encrypted speech telemetry active · Audio waveforms match structured linguistic token indices natively.
+        <footer className="mx-auto w-full max-w-5xl border-t border-white/5 pt-4 text-center">
+          <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-600">
+            <ShieldCheck size={13} className="text-emerald-500/70" />
+            Secure voice session active · responses are processed safely.
+          </p>
+        </footer>
       </div>
     </div>
   );
