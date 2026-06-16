@@ -11,6 +11,7 @@ import interviewRoutes from './routes/interviewRoutes.js';
 import resumeRoutes from './routes/resumeRoutes.js';
 import oaRoutes from './routes/oaRoutes.js';
 import { connectRabbitMQ } from "./config/rabbitmq.js";
+import healthRoutes from "./routes/healthRoutes.js";
 const app = express();
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -22,6 +23,7 @@ app.use('/api/interviews', interviewRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/dsa', oaRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use("/api/health", healthRoutes);
 app.get('/', (req, res) => {
   res.send('Intervyo.ai Core System API is online...');
 });
