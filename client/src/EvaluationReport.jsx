@@ -7,11 +7,14 @@ import {
   ShieldCheck,
   Download,
   Loader2,
+  AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { apiUrl } from "./config/api";
 
 export default function EvaluationReport({ report, onClose }) {
   const [liveReport, setLiveReport] = useState(report);
+const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (!liveReport?._id || liveReport.status !== "evaluating") return;
@@ -28,9 +31,9 @@ export default function EvaluationReport({ report, onClose }) {
 
         const data = await res.json();
 
-        if (res.ok && data.status === "completed") {
-          setLiveReport(data);
-        }
+      if (res.ok && (data.status === "completed" || data.status === "failed")) {
+  setLiveReport(data);
+}
       } catch (err) {
         console.error("Failed to poll evaluation:", err);
       }
@@ -47,6 +50,42 @@ export default function EvaluationReport({ report, onClose }) {
   const handleDownloadPDF = () => {
     window.print();
   };
+
+  const handleRetryEvaluation = async () => {
+  try {
+    setRetrying(true);
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      apiUrl(`/api/interviews/${liveReport._id}/retry-evaluation`),
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to retry evaluation.");
+    }
+
+    setLiveReport({
+      ...liveReport,
+      status: "evaluating",
+      isFinished: false,
+      overallFeedback:
+        "Evaluation retry is queued. Your report is being regenerated.",
+    });
+  } catch (err) {
+    alert(err.message || "Failed to retry evaluation.");
+  } finally {
+    setRetrying(false);
+  }
+};
 
   if (liveReport.status === "evaluating") {
     return (
@@ -79,6 +118,73 @@ export default function EvaluationReport({ report, onClose }) {
       </div>
     );
   }
+
+if (liveReport.status === "failed") {
+  return (
+    <div className="min-h-screen bg-[#0B0F19] text-gray-100 flex items-center justify-center p-6">
+      <div className="w-full max-w-xl rounded-3xl border border-red-500/20 bg-[#151D30]/90 p-8 text-center shadow-2xl">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 text-red-400">
+          <AlertTriangle size={34} />
+        </div>
+
+        <h1 className="mt-6 text-2xl font-black text-white">
+          Evaluation Failed
+        </h1>
+
+        <p className="mt-3 text-sm leading-relaxed text-gray-400">
+          Your interview answers were submitted successfully, but the background
+          AI evaluation could not be completed. You can retry the evaluation
+          without using extra credits.
+        </p>
+
+        <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-left text-xs text-red-200/90 space-y-2">
+          <p className="font-bold uppercase tracking-wider text-red-300">
+            Possible reasons
+          </p>
+          <p>• AI API timeout or temporary failure</p>
+          <p>• Invalid AI response format</p>
+          <p>• Worker or queue processing issue</p>
+        </div>
+
+        {liveReport.overallFeedback && (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-[#0B0F19] p-4 text-left text-xs text-gray-400">
+            <p className="font-bold uppercase tracking-wider text-gray-500 mb-2">
+              System Message
+            </p>
+            <p>{liveReport.overallFeedback}</p>
+          </div>
+        )}
+
+        <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <button
+            onClick={handleRetryEvaluation}
+            disabled={retrying}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-500 hover:to-indigo-500 disabled:opacity-60"
+          >
+            {retrying ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                Retrying...
+              </>
+            ) : (
+              <>
+                <RotateCcw size={15} />
+                Retry Evaluation
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={onClose}
+            className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-bold uppercase tracking-wider text-gray-300 transition-all hover:bg-white/10 hover:text-white"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-gray-100 p-6 md:p-12 overflow-y-auto font-sans print:bg-white print:text-black print:p-0">

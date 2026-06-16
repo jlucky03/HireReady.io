@@ -5,6 +5,7 @@ import {
   getInterviewHistory,
   getInterviewById,
   getInterviewAnalytics,
+  retryInterviewEvaluation,
 } from "../controllers/interviewController.js";
 import { protect } from '../controllers/authController.js'; // 🌟 FIXED: Points to your official authController path!
 import { redisRateLimiter } from "../middleware/rateLimiter.js";
@@ -37,6 +38,7 @@ router.post(
 );
 router.get("/analytics", protect, getInterviewAnalytics);
 router.get('/history', protect, getInterviewHistory);
+router.post("/:id/retry-evaluation", protect, retryInterviewEvaluation);
 router.get("/:id", protect, getInterviewById);
 
 export default router;

@@ -222,6 +222,57 @@ export const getInterviewById = async (req, res) => {
   }
 };
 
+export const retryInterviewEvaluation = async (req, res) => {
+  try {
+    const interview = await Interview.findOne({
+      _id: req.params.id,
+      user: req.user?._id,
+    });
+
+    if (!interview) {
+      return res.status(404).json({
+        message: "Interview not found.",
+      });
+    }
+
+    if (interview.status !== "failed") {
+      return res.status(400).json({
+        message: "Only failed evaluations can be retried.",
+      });
+    }
+
+    if (!Array.isArray(interview.questions) || interview.questions.length < 5) {
+      return res.status(400).json({
+        message: "Interview does not have enough answers for evaluation.",
+      });
+    }
+
+    interview.status = "evaluating";
+    interview.isFinished = false;
+    interview.currentStep = 6;
+    interview.overallFeedback =
+      "Evaluation retry is queued. Your report is being regenerated.";
+
+    await interview.save();
+
+    await publishEvaluationJob({
+      interviewId: interview._id.toString(),
+      userId: req.user._id.toString(),
+      retry: true,
+    });
+
+    res.status(202).json({
+      status: "evaluating",
+      message: "Evaluation retry queued successfully.",
+      interviewId: interview._id,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message || "Failed to retry evaluation.",
+    });
+  }
+};
+
 export const getInterviewAnalytics = async (req, res) => {
   try {
     const interviews = await Interview.find({ user: req.user?._id })

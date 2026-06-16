@@ -16,6 +16,7 @@ import {
   Receipt,
   TrendingUp,
   Sparkles,
+  LogOut,
 } from "lucide-react";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
@@ -25,6 +26,7 @@ export default function DashboardHome({
   onStartInterview,
   onViewReport,
   onOpenProgress,
+  onLogout,
   history = [],
   showToast,
 }) {
@@ -48,11 +50,7 @@ export default function DashboardHome({
   const userName = authUser?.name || user?.displayName || "Candidate";
   const userEmail = authUser?.email || user?.email || "";
 
-  const userAvatar =
-    user?.photoURL ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      userName
-    )}&background=6D28D9&color=fff`;
+const userInitial = userName?.trim()?.charAt(0)?.toUpperCase() || "C";
 
   const hasEnoughCredits = (authUser?.credits ?? 0) >= 3;
 
@@ -150,89 +148,104 @@ export default function DashboardHome({
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-indigo-600/20 blur-[120px]" />
         <div className="absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-purple-600/20 blur-[120px]" />
+        <div className="absolute bottom-0 left-1/2 h-80 w-80 rounded-full bg-blue-600/10 blur-[120px]" />
       </div>
 
       <div className="relative max-w-6xl mx-auto px-5 py-8 md:px-10 md:py-12 space-y-10">
-        <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-purple-900/40">
-              <Sparkles size={22} className="text-white" />
-            </div>
+ <header className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-xl p-5 md:p-6 shadow-2xl">
+  {/* Top row */}
+  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex items-center gap-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 shadow-lg shadow-purple-900/50">
+        <Sparkles size={25} className="text-white" />
+      </div>
 
-            <div className="space-y-1">
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                HireReady AI
-              </h1>
-              <p className="text-sm text-slate-400 max-w-md leading-relaxed">
-                AI-powered interview preparation, ATS optimization and
-                technical skill assessment.
-              </p>
-            </div>
-          </div>
+      <div>
+        <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          HireReady AI
+        </h1>
+        <p className="mt-1 text-sm text-slate-400 max-w-xl leading-relaxed">
+          AI-powered interview preparation, ATS optimization and technical skill assessment.
+        </p>
+      </div>
+    </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-xl">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-                Credits
-              </p>
-              <p
-                className={`text-2xl font-black leading-tight ${
-                  hasEnoughCredits ? "text-emerald-400" : "text-amber-400"
-                }`}
-              >
-                {authUser?.credits ?? 0}
-              </p>
-              <p className="text-[10px] text-slate-500">
-                3 / interview · 1 / ATS
-              </p>
-            </div>
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-3 min-w-[135px]">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-300/70">
+          Credits
+        </p>
+        <p className="text-2xl font-black text-emerald-400 leading-tight">
+          {authUser?.credits ?? 0}
+        </p>
+        <p className="text-[10px] text-slate-500">
+          3 / interview · 1 / ATS
+        </p>
+      </div>
 
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 backdrop-blur-xl">
-              <img
-                src={userAvatar}
-                alt="avatar"
-                className="h-11 w-11 rounded-full ring-2 ring-purple-500/40"
-              />
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-semibold text-white truncate max-w-[160px]">
-                  {userName}
-                </p>
-                <p className="text-xs text-slate-500 truncate max-w-[160px]">
-                  {userEmail}
-                </p>
-              </div>
-            </div>
+      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-lg ring-2 ring-purple-500/40">
+          {userInitial}
+        </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowHistoryModal(true)}
-                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold uppercase tracking-wider text-purple-300 backdrop-blur-xl transition-all hover:border-purple-500/40 hover:bg-purple-500/10 hover:text-purple-200"
-              >
-                <History size={15} />
-                <span className="hidden sm:inline">History</span>
-              </button>
+        <div className="hidden sm:block text-left">
+          <p className="text-sm font-semibold text-white truncate max-w-[180px]">
+            {userName}
+          </p>
+          <p className="text-xs text-slate-500 truncate max-w-[180px]">
+            {userEmail}
+          </p>
+        </div>
+      </div>
 
-              <button
-                onClick={() => setShowBuyCredits(true)}
-                className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-900/40 transition-all hover:from-indigo-400 hover:to-purple-500"
-              >
-                <CreditCard size={15} />
-                <span className="hidden sm:inline">Buy Credits</span>
-              </button>
+      <button
+        onClick={onLogout}
+        className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-bold uppercase tracking-wider text-red-300 transition-all hover:bg-red-500 hover:text-white"
+      >
+        <LogOut size={15} />
+        Logout
+      </button>
+    </div>
+  </div>
 
-              <button
-                onClick={() => setShowPaymentHistory(true)}
-                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-300 backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10"
-              >
-                <Receipt size={15} />
-                <span className="hidden sm:inline">Billing</span>
-              </button>
-            </div>
-          </div>
-        </header>
+  {/* Action row */}
+  <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3 border-t border-white/10 pt-5">
+    <button
+      onClick={onOpenProgress}
+      className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-500 hover:to-indigo-500"
+    >
+      <TrendingUp size={15} />
+      My Progress
+    </button>
+
+    <button
+      onClick={() => setShowHistoryModal(true)}
+      className="flex items-center justify-center gap-2 rounded-2xl border border-purple-500/20 bg-purple-500/10 px-4 py-3 text-xs font-bold uppercase tracking-wider text-purple-300 transition-all hover:border-purple-500/40 hover:bg-purple-500/20"
+    >
+      <History size={15} />
+      History
+    </button>
+
+    <button
+      onClick={() => setShowBuyCredits(true)}
+      className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-900/40 transition-all hover:from-indigo-400 hover:to-purple-500"
+    >
+      <CreditCard size={15} />
+      Buy Credits
+    </button>
+
+    <button
+      onClick={() => setShowPaymentHistory(true)}
+      className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-300 transition-all hover:border-white/20 hover:bg-white/10"
+    >
+      <Receipt size={15} />
+      Billing
+    </button>
+  </div>
+</header>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-7 text-center backdrop-blur-xl transition-all hover:border-blue-500/30 hover:bg-white/[0.07]">
+          <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-7 text-center backdrop-blur-xl transition-all hover:border-blue-500/30 hover:bg-white/[0.07]">
             <div className="space-y-5">
               <div className="flex items-center justify-center gap-3">
                 <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-400 select-none">
@@ -245,7 +258,7 @@ export default function DashboardHome({
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-xl font-black text-white">
                   Resume ATS Optimizer
                 </h3>
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
@@ -284,7 +297,7 @@ export default function DashboardHome({
             </div>
           </div>
 
-          <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-7 text-center backdrop-blur-xl transition-all hover:border-purple-500/30 hover:bg-white/[0.07]">
+          <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-7 text-center backdrop-blur-xl transition-all hover:border-purple-500/30 hover:bg-white/[0.07]">
             <div className="space-y-5">
               <div className="flex items-center justify-center gap-3">
                 <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-purple-400 select-none">
@@ -297,7 +310,7 @@ export default function DashboardHome({
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-xl font-black text-white">
                   Smart Voice Interview
                 </h3>
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
@@ -389,7 +402,7 @@ export default function DashboardHome({
         </div>
 
         {atsResult && (
-          <div className="animate-fade-in relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-xl">
+          <div className="animate-fade-in relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-xl">
             <div className="absolute left-0 top-0 h-full w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600" />
 
             <div className="flex flex-col gap-6 border-b border-white/10 pb-5 sm:flex-row sm:items-center">
@@ -453,17 +466,9 @@ export default function DashboardHome({
           </div>
         )}
 
-        <button
-          onClick={onOpenProgress}
-          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-500 hover:to-indigo-500"
-        >
-          <TrendingUp size={16} />
-          My Progress
-        </button>
-
         {showHistoryModal && (
           <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md">
-            <div className="w-full max-w-3xl space-y-5 overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/90 p-7 shadow-2xl backdrop-blur-xl max-h-[85vh]">
+            <div className="w-full max-w-3xl space-y-5 overflow-y-auto rounded-3xl border border-white/10 bg-slate-900/90 p-7 shadow-2xl backdrop-blur-xl max-h-[85vh]">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-purple-300">
                   <History size={16} />
@@ -564,10 +569,16 @@ export default function DashboardHome({
                               View Evaluation
                             </button>
                           ) : status === "failed" ? (
-                            <span className="text-[11px] font-bold uppercase text-red-400">
-                              Evaluation Failed
-                            </span>
-                          ) : (
+  <button
+    onClick={() => {
+      setShowHistoryModal(false);
+      onViewReport(session);
+    }}
+    className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-red-300 transition-all hover:bg-red-600 hover:text-white"
+  >
+    Evaluation Failed
+  </button>
+) : (
                             <button
                               onClick={() => {
                                 setShowHistoryModal(false);
@@ -602,10 +613,7 @@ export default function DashboardHome({
                               }}
                               className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-amber-300 transition-all hover:bg-amber-600 hover:text-white"
                             >
-                              <Play
-                                size={13}
-                                className="fill-amber-400"
-                              />
+                              <Play size={13} className="fill-amber-400" />
                               Resume Room
                             </button>
                           )}

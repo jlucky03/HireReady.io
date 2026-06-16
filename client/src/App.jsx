@@ -2,24 +2,31 @@ import React, { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
-import ProgressAnalytics from "./ProgressAnalytics";
+
 import AuthPage from "./AuthPage";
 import DashboardHome from "./DashboardHome";
 import InterviewRoom from "./InterviewRoom";
 import EvaluationReport from "./EvaluationReport";
 import CorporateGap from "./CorporateGap";
+import ProgressAnalytics from "./ProgressAnalytics";
 import { apiUrl } from "./config/api";
 
 export default function App() {
-
   const [toast, setToast] = useState("");
 
-    const showToast = (msg) => {
-  setToast(msg);
-  setTimeout(() => setToast(""), 3000);
-};
- const { firebaseUser, setFirebaseUser, loading, setLoading, logoutStore, fetchMe } =
-  useAuthStore();
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 3000);
+  };
+
+  const {
+    firebaseUser,
+    setFirebaseUser,
+    loading,
+    setLoading,
+    logoutStore,
+    fetchMe,
+  } = useAuthStore();
 
   const [activeView, setActiveView] = useState(() => {
     if (localStorage.getItem("intervyo_active_id")) return "voice_room";
@@ -37,34 +44,37 @@ export default function App() {
   const [historyLogs, setHistoryLogs] = useState([]);
   const [completedReportData, setCompletedReportData] = useState(null);
 
-useEffect(() => {
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      setFirebaseUser(user);
 
-  const unsub = onAuthStateChanged(auth, async (user) => {
-    setFirebaseUser(user);
+      if (user) {
+        try {
+          const token = await user.getIdToken();
 
-if (user) {
-  const token = await user.getIdToken();
+          await fetch(apiUrl("/api/auth/firebase-login"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ token }),
+          });
 
-  await fetch(apiUrl("/api/auth/firebase-login"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ token }),
-  });
+          localStorage.setItem("token", token);
+          await fetchMe(token);
+        } catch (err) {
+          console.error("Failed to sync Firebase login:", err);
+        }
+      } else {
+        localStorage.removeItem("token");
+      }
 
-  localStorage.setItem("token", token);
-  await fetchMe(token);
-} else {
-  localStorage.removeItem("token");
-}
+      setLoading(false);
+    });
 
-    setLoading(false);
-  });
-
-  return () => unsub();
-}, []);
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (firebaseUser) fetchHistory();
@@ -87,7 +97,10 @@ if (user) {
       });
 
       const data = await response.json();
-      if (response.ok && Array.isArray(data)) setHistoryLogs(data);
+
+      if (response.ok && Array.isArray(data)) {
+        setHistoryLogs(data);
+      }
     } catch (err) {
       console.error("Failed to sync history:", err);
     }
@@ -101,7 +114,6 @@ if (user) {
   };
 
   const startInterviewHandler = (topic, difficulty) => {
-  
     setSessionTopic(topic);
     setSessionDifficulty(difficulty);
     setActiveView("voice_room");
@@ -122,37 +134,32 @@ if (user) {
 
   if (!firebaseUser) return <AuthPage />;
 
-
   return (
     <div className="bg-[#0B0F19] min-h-screen text-gray-100 selection:bg-purple-500/30">
-      <button
-        onClick={handleLogout}
-        className="fixed top-4 right-4 z-50 bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
-      >
-        Logout
-      </button>
-
       {toast && (
-  <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50
-                  bg-red-500/90 text-white px-6 py-3 rounded-xl
-                  shadow-2xl border border-red-400 animate-pulse">
-    ⚠️ {toast}
-  </div>
-)}
+        <div
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-50
+          bg-red-500/90 text-white px-6 py-3 rounded-xl
+          shadow-2xl border border-red-400 animate-pulse"
+        >
+          ⚠️ {toast}
+        </div>
+      )}
 
       {activeView === "dashboard" && (
         <DashboardHome
-  onStartInterview={startInterviewHandler}    
+          onStartInterview={startInterviewHandler}
           onViewReport={handleDisplayEvaluationReport}
+          onOpenProgress={() => setActiveView("progress")}
+          onLogout={handleLogout}
           history={historyLogs}
-           showToast={showToast}
-           onOpenProgress={() => setActiveView("progress")}
+          showToast={showToast}
         />
       )}
 
       {activeView === "progress" && (
-  <ProgressAnalytics onBack={() => setActiveView("dashboard")} />
-)}
+        <ProgressAnalytics onBack={() => setActiveView("dashboard")} />
+      )}
 
       {activeView === "voice_room" && (
         <InterviewRoom

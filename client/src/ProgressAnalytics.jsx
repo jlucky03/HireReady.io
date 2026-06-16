@@ -75,7 +75,7 @@ export default function ProgressAnalytics({ onBack }) {
 
   const statCards = [
     {
-      label: "Total Interviews",
+      label: "Total Attempts",
       value: analytics.totalInterviews,
       icon: BarChart3,
     },
