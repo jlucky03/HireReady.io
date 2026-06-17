@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
-
+import AdminDashboard from "./AdminDashboard";
 import AuthPage from "./AuthPage";
 import DashboardHome from "./DashboardHome";
 import InterviewRoom from "./InterviewRoom";
@@ -20,13 +20,14 @@ export default function App() {
   };
 
   const {
-    firebaseUser,
-    setFirebaseUser,
-    loading,
-    setLoading,
-    logoutStore,
-    fetchMe,
-  } = useAuthStore();
+  firebaseUser,
+  user: authUser,
+  setFirebaseUser,
+  loading,
+  setLoading,
+  logoutStore,
+  fetchMe,
+} = useAuthStore();
 
   const [activeView, setActiveView] = useState(() => {
     if (localStorage.getItem("intervyo_active_id")) return "voice_room";
@@ -106,12 +107,16 @@ export default function App() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    logoutStore();
-    localStorage.clear();
-    setActiveView("dashboard");
-  };
+const handleLogout = async () => {
+  const confirmLogout = window.confirm("Are you sure you want to logout?");
+
+  if (!confirmLogout) return;
+
+  await signOut(auth);
+  logoutStore();
+  localStorage.clear();
+  setActiveView("dashboard");
+};
 
   const startInterviewHandler = (topic, difficulty) => {
     setSessionTopic(topic);
@@ -134,6 +139,14 @@ export default function App() {
 
   if (!firebaseUser) return <AuthPage />;
 
+  if (authUser?.role === "admin") {
+  return (
+    <div className="bg-[#0B0F19] min-h-screen text-gray-100">
+      <AdminDashboard onBack={handleLogout} />
+    </div>
+  );
+}
+
   return (
     <div className="bg-[#0B0F19] min-h-screen text-gray-100 selection:bg-purple-500/30">
       {toast && (
@@ -151,6 +164,7 @@ export default function App() {
           onStartInterview={startInterviewHandler}
           onViewReport={handleDisplayEvaluationReport}
           onOpenProgress={() => setActiveView("progress")}
+          onOpenAdmin={() => setActiveView("admin")}
           onLogout={handleLogout}
           history={historyLogs}
           showToast={showToast}
@@ -160,6 +174,10 @@ export default function App() {
       {activeView === "progress" && (
         <ProgressAnalytics onBack={() => setActiveView("dashboard")} />
       )}
+
+      {activeView === "admin" && (
+  <AdminDashboard onBack={() => setActiveView("dashboard")} />
+)}
 
       {activeView === "voice_room" && (
         <InterviewRoom

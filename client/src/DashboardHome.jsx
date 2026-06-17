@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import BuyCredits from "./BuyCredits";
 import PaymentHistory from "./PaymentHistory";
-import SystemStatus from "./SystemStatus";
 import {
   FileText,
   Volume2,
@@ -18,6 +17,7 @@ import {
   TrendingUp,
   Sparkles,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
@@ -28,6 +28,7 @@ export default function DashboardHome({
   onViewReport,
   onOpenProgress,
   onLogout,
+  onOpenAdmin,
   history = [],
   showToast,
 }) {
@@ -245,7 +246,6 @@ const userInitial = userName?.trim()?.charAt(0)?.toUpperCase() || "C";
   </div>
 </header>
 
-<SystemStatus />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-7 text-center backdrop-blur-xl transition-all hover:border-blue-500/30 hover:bg-white/[0.07]">
