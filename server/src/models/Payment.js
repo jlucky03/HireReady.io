@@ -8,11 +8,18 @@ const paymentSchema = new mongoose.Schema(
     razorpaySignature: { type: String },
     amount: { type: Number, required: true },
     credits: { type: Number, required: true },
+    processingAt: {
+  type: Date,
+},
+
+paidAt: {
+  type: Date,
+},
     status: {
-      type: String,
-      enum: ["created", "paid", "failed"],
-      default: "created",
-    },
+  type: String,
+  enum: ["created", "processing", "paid", "failed"],
+  default: "created",
+},
   },
   { timestamps: true }
 );

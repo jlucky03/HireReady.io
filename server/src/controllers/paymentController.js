@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import Payment from "../models/Payment.js";
+import User from "../models/User.js";
 
 const getRazorpay = () =>
   new Razorpay({
@@ -58,6 +59,12 @@ export const verifyCreditPayment = async (req, res) => {
       razorpay_signature,
     } = req.body;
 
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({
+        message: "Missing Razorpay payment verification fields.",
+      });
+    }
+
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
 
     const expectedSignature = crypto
@@ -66,7 +73,9 @@ export const verifyCreditPayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ message: "Payment verification failed" });
+      return res.status(400).json({
+        message: "Payment verification failed.",
+      });
     }
 
     const payment = await Payment.findOne({
@@ -75,33 +84,73 @@ export const verifyCreditPayment = async (req, res) => {
     });
 
     if (!payment) {
-      return res.status(404).json({ message: "Payment record not found" });
+      return res.status(404).json({
+        message: "Payment record not found.",
+      });
     }
 
     if (payment.status === "paid") {
       return res.status(200).json({
-        message: "Payment already verified",
+        status: "success",
+        message: "Payment already verified. Credits were already added.",
         credits: req.user.credits,
       });
     }
 
-    payment.razorpayPaymentId = razorpay_payment_id;
-    payment.razorpaySignature = razorpay_signature;
-    payment.status = "paid";
-    await payment.save();
+    const lockedPayment = await Payment.findOneAndUpdate(
+      {
+        _id: payment._id,
+        status: "created",
+      },
+      {
+        $set: {
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+          status: "processing",
+          processingAt: new Date(),
+        },
+      },
+      {
+        new: true,
+      }
+    );
 
-    req.user.credits += payment.credits;
-    await req.user.save();
+    if (!lockedPayment) {
+      const freshUser = await User.findById(req.user._id).select("credits");
 
-    res.status(200).json({
+      return res.status(200).json({
+        status: "success",
+        message: "Payment is already being processed.",
+        credits: freshUser?.credits ?? req.user.credits,
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $inc: {
+          credits: lockedPayment.credits,
+        },
+      },
+      {
+        new: true,
+      }
+    ).select("credits");
+
+    lockedPayment.status = "paid";
+    lockedPayment.paidAt = new Date();
+    await lockedPayment.save();
+
+    return res.status(200).json({
       status: "success",
-      message: "Credits added successfully",
-      credits: req.user.credits,
+      message: "Credits added successfully.",
+      credits: updatedUser.credits,
     });
   } catch (err) {
-  console.error("Create order error:", err);
-  res.status(500).json({ message: err.message });
-}
+    return res.status(500).json({
+      message: err.message || "Payment verification failed.",
+    });
+  }
 };
 
 export const getPaymentHistory = async (req, res) => {
