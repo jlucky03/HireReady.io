@@ -1,4 +1,3 @@
-import React from 'react';
 import { Award, ChevronRight, CornerDownRight, ThumbsUp, RefreshCw, FileText, ArrowLeft } from 'lucide-react';
 
 export default function PerformanceDashboard({ interview, onReset }) {

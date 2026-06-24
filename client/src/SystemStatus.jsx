@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   CheckCircle2,
@@ -32,6 +32,7 @@ export default function SystemStatus() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHealth();
 
     const interval = setInterval(fetchHealth, 30000);

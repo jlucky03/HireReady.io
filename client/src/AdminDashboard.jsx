@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ShieldCheck,
   Users,
@@ -238,6 +238,7 @@ export default function AdminDashboard({ onBack }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAdminData();
   }, []);
 
@@ -263,7 +264,7 @@ export default function AdminDashboard({ onBack }) {
 
   const formatRevenue = (amount) => {
     const value = Number(amount || 0);
-    return `₹${Math.round(value / 100)}`;
+    return `Rs. ${Math.round(value / 100)}`;
   };
 
   const healthItems = [

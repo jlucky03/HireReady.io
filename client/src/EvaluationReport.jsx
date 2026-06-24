@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Award,
   MessageSquare,
@@ -103,7 +103,7 @@ const [retrying, setRetrying] = useState(false);
           </p>
 
           <div className="mt-6 bg-[#0B0F19] border border-gray-800 rounded-xl p-4 text-left text-xs text-gray-400">
-            <p>✅ Interview answers received</p>
+            <p>Interview answers received</p>
             <p>📩 Evaluation job queued</p>
             <p>👷 Worker generating AI report...</p>
           </div>
@@ -141,9 +141,9 @@ if (liveReport.status === "failed") {
           <p className="font-bold uppercase tracking-wider text-red-300">
             Possible reasons
           </p>
-          <p>• AI API timeout or temporary failure</p>
-          <p>• Invalid AI response format</p>
-          <p>• Worker or queue processing issue</p>
+          <p>- AI API timeout or temporary failure</p>
+          <p>- Invalid AI response format</p>
+          <p>- Worker or queue processing issue</p>
         </div>
 
         {liveReport.overallFeedback && (
@@ -253,7 +253,7 @@ if (liveReport.status === "failed") {
   {liveReport.strengths?.length > 0 ? (
     <ul className="space-y-2 text-xs text-gray-300">
       {liveReport.strengths.map((x, i) => (
-        <li key={i}>✅ {x}</li>
+        <li key={i}>Done: {x}</li>
       ))}
     </ul>
   ) : (
@@ -269,7 +269,7 @@ if (liveReport.status === "failed") {
             </h3>
             <ul className="space-y-2 text-xs text-gray-300">
               {(liveReport.weaknesses || []).map((x, i) => (
-                <li key={i}>⚠️ {x}</li>
+                <li key={i}>Warning: {x}</li>
               ))}
             </ul>
           </div>
@@ -280,7 +280,7 @@ if (liveReport.status === "failed") {
             </h3>
             <ul className="space-y-2 text-xs text-gray-300">
               {(liveReport.suggestions || []).map((x, i) => (
-                <li key={i}>💡 {x}</li>
+                <li key={i}>Tip: {x}</li>
               ))}
             </ul>
           </div>

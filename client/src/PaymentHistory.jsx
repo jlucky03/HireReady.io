@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiUrl } from "./config/api";
 
 export default function PaymentHistory({ onClose }) {
@@ -61,7 +61,7 @@ export default function PaymentHistory({ onClose }) {
 
                 <div className="text-right">
                   <p className="text-white font-bold">
-                    ₹{p.amount / 100}
+                    Rs. {p.amount / 100}
                   </p>
                   <p className="text-green-400 text-sm">
                     {p.status}

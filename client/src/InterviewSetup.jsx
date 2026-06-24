@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sparkles, Terminal, Sliders, Play } from 'lucide-react';
+import { apiUrl } from './config/api';
 
 export default function InterviewSetup({ onStartInterview }) {
   const [topic, setTopic] = useState('');
@@ -13,7 +14,7 @@ export default function InterviewSetup({ onStartInterview }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/interviews/start', {
+      const response = await fetch(apiUrl('/api/interviews/start'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

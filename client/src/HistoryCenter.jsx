@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, BookOpen, AlertCircle, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { apiUrl } from './config/api';
 
 export default function HistoryCenter({ onSelectInterview, onClose }) {
   const [history, setHistory] = useState([]);
@@ -9,7 +10,7 @@ export default function HistoryCenter({ onSelectInterview, onClose }) {
     const fetchHistory = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/interviews/history', {
+        const response = await fetch(apiUrl('/api/interviews/history'), {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -26,14 +27,14 @@ export default function HistoryCenter({ onSelectInterview, onClose }) {
   const handleResumeOrView = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/interviews/${id}`, {
+      const response = await fetch(apiUrl(`/api/interviews/${id}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
       if (response.ok) {
         onSelectInterview(data.interview);
       }
-    } catch (err) {
+    } catch {
       alert("Failed to pull session state metadata.");
     }
   };

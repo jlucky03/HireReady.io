@@ -12,7 +12,23 @@ export const connectRabbitMQ = async () => {
       process.env.RABBITMQ_URL || "amqp://localhost:5672"
     );
 
+    connection.on("error", (err) => {
+  console.warn("RabbitMQ connection error:", err.message);
+});
+
+connection.on("close", () => {
+  console.warn("RabbitMQ connection closed. Running without queue.");
+});
+
     channel = await connection.createChannel();
+
+    channel.on("error", (err) => {
+  console.warn("RabbitMQ channel error:", err.message);
+});
+
+channel.on("close", () => {
+  console.warn("RabbitMQ channel closed.");
+});
 
     await channel.assertQueue(AI_EVALUATION_DLQ, {
       durable: true,
@@ -28,29 +44,37 @@ export const connectRabbitMQ = async () => {
 
     console.log("✅ RabbitMQ connected");
   } catch (err) {
-    console.error("❌ RabbitMQ connection failed:", err.message);
-    throw err;
+   console.warn("⚠️ RabbitMQ disabled:", err.message);
+connection = null;
+channel = null;
   }
 };
 
 export const getRabbitChannel = () => channel;
 
 export const publishEvaluationJob = async (payload) => {
-  if (!channel) {
-    throw new Error("RabbitMQ channel not initialized");
-  }
-
   if (!payload?.interviewId) {
-    throw new Error("Invalid evaluation job payload");
+    console.warn("Invalid evaluation job payload");
+    return false;
   }
 
-  const sent = channel.sendToQueue(
-    AI_EVALUATION_QUEUE,
-    Buffer.from(JSON.stringify(payload)),
-    { persistent: true }
-  );
+  if (!channel) {
+    console.warn("RabbitMQ unavailable. Skipping queue publish.");
+    return false;
+  }
 
-  if (!sent) {
-    console.warn("⚠️ RabbitMQ publish buffer is full");
+  try {
+    const sent = channel.sendToQueue(
+      AI_EVALUATION_QUEUE,
+      Buffer.from(JSON.stringify(payload)),
+      { persistent: true }
+    );
+
+    if (!sent) console.warn("RabbitMQ publish buffer is full");
+    return sent;
+  } catch (err) {
+    console.warn("RabbitMQ publish failed:", err.message);
+    channel = null;
+    return false;
   }
 };

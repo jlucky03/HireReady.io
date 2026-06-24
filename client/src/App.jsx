@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
@@ -78,6 +78,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     if (firebaseUser) fetchHistory();
   }, [activeView, firebaseUser]);
 
@@ -88,7 +89,7 @@ export default function App() {
     }
   }, [activeView, sessionTopic, sessionDifficulty]);
 
-  const fetchHistory = async () => {
+  async function fetchHistory() {
     try {
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
@@ -105,7 +106,7 @@ export default function App() {
     } catch (err) {
       console.error("Failed to sync history:", err);
     }
-  };
+  }
 
 const handleLogout = async () => {
   const confirmLogout = window.confirm("Are you sure you want to logout?");
@@ -155,7 +156,7 @@ const handleLogout = async () => {
           bg-red-500/90 text-white px-6 py-3 rounded-xl
           shadow-2xl border border-red-400 animate-pulse"
         >
-          ⚠️ {toast}
+          Warning: {toast}
         </div>
       )}
 

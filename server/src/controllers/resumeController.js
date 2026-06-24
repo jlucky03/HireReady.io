@@ -121,7 +121,15 @@ export const analyzeAtsResumeScore = async (req, res) => {
     const resumeHash = getResumeHash(resumeRawText);
 const cacheKey = `ats:${req.user._id}:${resumeHash}`;
 
-const cached = await redisClient.get(cacheKey);
+let cached = null;
+
+try {
+  if (redisClient?.isOpen) {
+    cached = await redisClient.get(cacheKey);
+  }
+} catch (err) {
+  console.warn("Redis cache read skipped:", err.message);
+}
 
 if (cached) {
   const cachedData = JSON.parse(cached);
@@ -186,14 +194,20 @@ Target Schema:
 req.user.credits -= 1;
 await req.user.save();
 
-await redisClient.setEx(
-  cacheKey,
-  60 * 60 * 24,
-  JSON.stringify({
-    atsAnalysis: aiOutput,
-    extractedText: resumeRawText,
-  })
-);
+try {
+  if (redisClient?.isOpen) {
+    await redisClient.setEx(
+      cacheKey,
+      60 * 60 * 24,
+      JSON.stringify({
+        atsAnalysis: aiOutput,
+        extractedText: resumeRawText,
+      })
+    );
+  }
+} catch (err) {
+  console.warn("Redis cache save skipped:", err.message);
+}
 res.status(200).json({
   status: 'success',
   atsAnalysis: aiOutput,

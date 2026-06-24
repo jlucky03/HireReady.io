@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Mic,
   MicOff,
@@ -18,9 +18,11 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
   const { user: authUser, setUser } = useAuthStore();
 
   const [currentStep, setCurrentStep] = useState(() => {
-    const savedStep = localStorage.getItem("intervyo_current_step");
-    return savedStep ? parseInt(savedStep, 10) : 1;
-  });
+  const savedStep = localStorage.getItem("intervyo_current_step");
+  const step = savedStep ? parseInt(savedStep, 10) : 1;
+  return Math.min(Math.max(step, 1), 5);
+});
+  
 
   const [question, setQuestion] = useState(() => {
     return (
@@ -119,7 +121,7 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
     localStorage.setItem("intervyo_current_question", question);
   }, [activeId, currentStep, question]);
 
-  const startVoiceSession = async () => {
+  async function startVoiceSession() {
     setNetworkError("");
 
     try {
@@ -160,9 +162,9 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
         setQuestion("Unable to start interview session.");
       }
     }
-  };
+  }
 
-  const speakText = (text) => {
+  function speakText(text) {
     if (!window.speechSynthesis || !text) return;
 
     window.speechSynthesis.cancel();
@@ -190,7 +192,7 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
     }
 
     window.speechSynthesis.speak(utterance);
-  };
+  }
 
   const toggleVoiceCapture = () => {
     if (!recognitionRef.current) {
@@ -265,21 +267,19 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
         return;
       }
 
-      if (data.status === "completed" || currentStep >= 5) {
-        clearSessionStorage();
+   if (data.status === "completed") {
+  clearSessionStorage();
 
-        if (onFinished && data.interviewData) {
-          onFinished(data.interviewData);
-        } else {
-          setNetworkError("Evaluation is processing. Please check History shortly.");
+  if (onFinished) {
+    onFinished(
+      data.interviewData ||
+      data.interview ||
+      data
+    );
+  }
 
-          setTimeout(() => {
-            onExit();
-          }, 2500);
-        }
-
-        return;
-      }
+  return;
+}
 
       const nextPrompt =
         data.nextQuestion ||

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "./firebase";
 import { motion } from "framer-motion";
+import { apiUrl } from "./config/api";
 
 export default function AuthPage() {
   const [isSignup, setIsSignup] = useState(true);
@@ -19,10 +20,7 @@ const [loading, setLoading] = useState(false);
  const syncWithBackend = async (firebaseUser) => {
   const token = await firebaseUser.getIdToken(true);
 
-  console.log("Firebase UID:", firebaseUser.uid);
-  console.log("Token start:", token.slice(0, 20));
-
-  const res = await fetch("http://localhost:5000/api/auth/firebase-login", {
+  const res = await fetch(apiUrl("/api/auth/firebase-login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -31,7 +29,6 @@ const [loading, setLoading] = useState(false);
   });
 
   const data = await res.json();
-  console.log("Backend response:", data);
 
   if (!res.ok) throw new Error(data.message || "Backend auth failed");
 

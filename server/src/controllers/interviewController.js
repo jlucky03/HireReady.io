@@ -1,6 +1,7 @@
 import Groq from 'groq-sdk';
 import Interview from '../models/Interview.js';
 import { publishEvaluationJob } from "../config/rabbitmq.js";
+import { evaluateInterview } from "../services/evaluateInterview.js";
 
 let groqInstance = null;
 const getGroqClient = () => {
@@ -149,16 +150,37 @@ sessionDoc.questions[activeIndex].answer = answer || "";
 
   await sessionDoc.save();
 
-  await publishEvaluationJob({
+let queued = false;
+
+try {
+  queued = await publishEvaluationJob({
     interviewId: sessionDoc._id.toString(),
     userId: req.user._id.toString(),
   });
+} catch (err) {
+  console.warn("RabbitMQ publish failed, using direct fallback:", err.message);
+}
+
+if (queued) {
+  console.log("RabbitMQ queued evaluation");
 
   return res.status(202).json({
     status: "evaluating",
     message: "Final evaluation is being generated.",
     interviewId: sessionDoc._id,
   });
+}
+
+console.log("RabbitMQ unavailable, running direct evaluation fallback");
+
+const completedInterview = await evaluateInterview(sessionDoc._id.toString());
+
+return res.status(200).json({
+  status: "completed",
+  message: "Final evaluation generated successfully.",
+  interviewId: completedInterview._id,
+  interviewData: completedInterview,
+});
 }
     // GENERATE NEXT SEQUENTIAL CONCEPTS QUESTION (Rounds 1 - 4)
     const prompt = `You are a strict technical recruiter conducting a live voice interview. Review the question asked and the candidate's verbal reply:

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuthStore } from "./store/authStore";
+import { apiUrl } from "./config/api";
 
 const plans = [
   { id: "starter", name: "Starter", credits: 10, price: 99 },
@@ -29,7 +30,7 @@ export default function BuyCredits({ onClose, showToast }) {
 
       const token = localStorage.getItem("token");
 
-      const orderRes = await fetch("http://localhost:5000/api/payments/create-order", {
+      const orderRes = await fetch(apiUrl("/api/payments/create-order"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +51,7 @@ export default function BuyCredits({ onClose, showToast }) {
   order_id: order.orderId,
 
   handler: async (response) => {
-    const verifyRes = await fetch("http://localhost:5000/api/payments/verify", {
+    const verifyRes = await fetch(apiUrl("/api/payments/verify"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -114,7 +115,7 @@ razorpay.open();
               <h3 className="text-white font-bold">{p.name}</h3>
               <p className="text-3xl font-black text-purple-400 mt-3">{p.credits}</p>
               <p className="text-xs text-gray-500">credits</p>
-              <p className="text-lg font-bold text-white mt-4">₹{p.price}</p>
+              <p className="text-lg font-bold text-white mt-4">Rs. {p.price}</p>
 
               <button
                 onClick={() => buyPlan(p.id)}

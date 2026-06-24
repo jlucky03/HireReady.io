@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ArrowLeft, FileText, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Sparkles } from 'lucide-react';
+import { apiUrl } from './config/api';
 
 export default function AtsOptimizer({ onBackToHome }) {
   const [resumeText, setResumeText] = useState('');
@@ -14,7 +15,7 @@ export default function AtsOptimizer({ onBackToHome }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/resume/analyze', {
+      const response = await fetch(apiUrl('/api/resume/analyze'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +43,7 @@ export default function AtsOptimizer({ onBackToHome }) {
       <div className="max-w-4xl mx-auto">
         
         <button onClick={onBackToHome} className="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-400 hover:text-white mb-6 transition-colors cursor-pointer">
-          ← Back to Dashboard
+          Back to Dashboard
         </button>
 
         <div className="bg-[#151D30] border border-gray-800 rounded-2xl p-6 md:p-8 shadow-2xl mb-8">

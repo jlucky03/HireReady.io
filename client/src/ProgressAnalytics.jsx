@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Trophy,
@@ -86,17 +86,17 @@ export default function ProgressAnalytics({ onBack }) {
     },
     {
   label: "Average Score",
-  value: analytics.completedInterviews > 0 ? `${analytics.averageScore}%` : "—",
+  value: analytics.completedInterviews > 0 ? `${analytics.averageScore}%` : "-",
   icon: TrendingUp,
 },
 {
   label: "Best Score",
-  value: analytics.completedInterviews > 0 ? `${analytics.bestScore}%` : "—",
+  value: analytics.completedInterviews > 0 ? `${analytics.bestScore}%` : "-",
   icon: Trophy,
 },
 {
   label: "Latest Score",
-  value: analytics.completedInterviews > 0 ? `${analytics.latestScore}%` : "—",
+  value: analytics.completedInterviews > 0 ? `${analytics.latestScore}%` : "-",
   icon: Target,
 },
   ];
@@ -132,13 +132,6 @@ export default function ProgressAnalytics({ onBack }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {statCards.map((card) => {
             const Icon = card.icon;
-
-            const getStatusClass = (status) => {
-  if (status === "completed") return "bg-emerald-500/10 text-emerald-300";
-  if (status === "failed") return "bg-red-500/10 text-red-300";
-  if (status === "evaluating") return "bg-blue-500/10 text-blue-300";
-  return "bg-amber-500/10 text-amber-300";
-};
 
             return (
               <div
@@ -245,7 +238,7 @@ export default function ProgressAnalytics({ onBack }) {
                   <AlertTriangle size={18} className="text-amber-400 mt-0.5" />
                   <div>
                     <p className="font-bold text-amber-300">
-                      {item.topic} — {item.averageScore}%
+                      {item.topic} - {item.averageScore}%
                     </p>
                     <p className="text-slate-300 text-sm mt-1">
                       {item.suggestion}
@@ -281,7 +274,7 @@ export default function ProgressAnalytics({ onBack }) {
                       {item.difficulty}
                     </td>
                     <td className="py-3">
-                      {item.score !== null ? `${item.score}%` : "—"}
+                      {item.score !== null ? `${item.score}%` : "-"}
                     </td>
                     <td className="py-3">
                   <span

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import BuyCredits from "./BuyCredits";
 import PaymentHistory from "./PaymentHistory";
 import {
@@ -17,7 +17,6 @@ import {
   TrendingUp,
   Sparkles,
   LogOut,
-  ShieldCheck,
 } from "lucide-react";
 import { auth } from "./firebase";
 import { useAuthStore } from "./store/authStore";
@@ -28,7 +27,6 @@ export default function DashboardHome({
   onViewReport,
   onOpenProgress,
   onLogout,
-  onOpenAdmin,
   history = [],
   showToast,
 }) {
@@ -53,8 +51,6 @@ export default function DashboardHome({
   const userEmail = authUser?.email || user?.email || "";
 
 const userInitial = userName?.trim()?.charAt(0)?.toUpperCase() || "C";
-
-  const hasEnoughCredits = (authUser?.credits ?? 0) >= 3;
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
@@ -94,9 +90,9 @@ const userInitial = userName?.trim()?.charAt(0)?.toUpperCase() || "C";
       setCachedResumeText(data.extractedText || "");
 
       if (data.cached) {
-        showToast("⚡ Redis Cache Hit — skipped AI processing.");
+        showToast("Redis cache hit - skipped AI processing.");
       } else {
-        showToast("🚀 AI analysis completed and cached.");
+        showToast("AI analysis completed and cached.");
       }
 
       if (typeof data.remainingCredits === "number") {
@@ -360,7 +356,7 @@ const userInitial = userName?.trim()?.charAt(0)?.toUpperCase() || "C";
 
                   {interviewMode === "resume" ? (
                     <div className="w-full select-none truncate rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2.5 text-xs font-medium tracking-wide text-purple-300">
-                      ✨ Resume Loaded
+                      Resume Loaded
                     </div>
                   ) : (
                     <select

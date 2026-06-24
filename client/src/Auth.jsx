@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Mail, Lock, User, Terminal, ArrowRight } from 'lucide-react';
+import { apiUrl } from './config/api';
 
 export default function Auth({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,7 +21,7 @@ export default function Auth({ onAuthSuccess }) {
     
     try {
       // Connects directly to our local running Express backend port 5000
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(apiUrl(endpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -115,7 +116,7 @@ export default function Auth({ onAuthSuccess }) {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                placeholder="••••••••"
+                  placeholder="Password"
                 className="w-full bg-[#0B0F19] border border-gray-800 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors text-sm"
               />
             </div>

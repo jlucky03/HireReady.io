@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { apiUrl } from "../config/api";
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -10,7 +11,7 @@ export const useAuthStore = create((set) => ({
   setLoading: (loading) => set({ loading }),
 
   fetchMe: async (token) => {
-    const res = await fetch("http://localhost:5000/api/auth/me", {
+    const res = await fetch(apiUrl("/api/auth/me"), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { Timer, Code2, Play, Loader2, CheckCircle2, ArrowLeft, Terminal, FileText, Check, X, Code, Info, Globe } from 'lucide-react';
+import { Timer, Play, Loader2, CheckCircle2, ArrowLeft, Terminal, FileText, Check, X, Code, Info, Globe } from 'lucide-react';
+import { apiUrl } from './config/api';
 
 export default function CorporateGap({ topic, difficulty, onBackToHome }) {
   const [exam, setExam] = useState(null);
@@ -18,6 +19,7 @@ export default function CorporateGap({ topic, difficulty, onBackToHome }) {
   const timerRef = useRef(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     initializeExamBundle();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [topic, difficulty]);
@@ -33,11 +35,11 @@ export default function CorporateGap({ topic, difficulty, onBackToHome }) {
     return () => clearInterval(timerRef.current);
   }, [timeLeft, exam]);
 
-  const initializeExamBundle = async () => {
+  async function initializeExamBundle() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/dsa/start', {
+      const response = await fetch(apiUrl('/api/dsa/start'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ topic, difficulty })
@@ -68,7 +70,7 @@ export default function CorporateGap({ topic, difficulty, onBackToHome }) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const activeProblem = exam?.problems && Array.isArray(exam.problems) ? exam.problems[activeIdx] : null;
   const activeEval = activeProblem ? problemEvaluations[activeProblem._id] : null;
@@ -87,7 +89,7 @@ export default function CorporateGap({ topic, difficulty, onBackToHome }) {
     setTerminalTab("results"); 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/dsa/finalize', {
+      const response = await fetch(apiUrl('/api/dsa/finalize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ 
