@@ -8,6 +8,22 @@ HireReady AI is a full-stack AI-powered interview and resume preparation platfor
 
 Job seekers often struggle to understand why their resumes are not shortlisted and how well they can perform in technical interviews. HireReady AI helps users practice with AI-driven interview sessions, analyze resumes for ATS compatibility, track progress, and manage usage through credits.
 
+## 🚀 Resume Highlights
+
+* Full-Stack AI SaaS Platform
+* React + Node.js + MongoDB Architecture
+* Firebase Authentication (Email/Password + Google Login)
+* AI Resume ATS Analysis using Groq LLM
+* AI Interview Evaluation System
+* Redis Caching Layer with Fallback Support
+* RabbitMQ Queue-Based Processing
+* Direct Evaluation Fallback Mechanism
+* Razorpay Payment Integration
+* Credit-Based Usage System
+* Analytics Dashboard & Progress Tracking
+* Admin Dashboard & Role-Based Access Control
+
+
 ## Key Features
 
 | Feature | Description |
@@ -40,39 +56,36 @@ Job seekers often struggle to understand why their resumes are not shortlisted a
 ## Architecture Overview
 
 ```text
-User Browser
-  |
-  | React + Vite frontend
-  v
-Express API Server
-  |
-  |-- Firebase Admin SDK -> verifies Firebase ID token
-  |-- MongoDB/Mongoose -> users, interviews, payments, exams
-  |-- Groq API -> resume analysis and AI interview generation
-  |-- Redis -> ATS cache and rate limiting
-  |-- Razorpay -> credit purchase orders and verification
-  |
-  v
-RabbitMQ Queue
-  |
-  v
-Evaluation Worker
-  |
-  |-- Groq API -> final interview evaluation
-  |-- MongoDB -> stores score, feedback, strengths, weaknesses
+                ┌─────────────────────┐
+                │     React Client    │
+                └──────────┬──────────┘
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │   Express Backend   │
+                └──────────┬──────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                  ▼
+   MongoDB             Redis Cache         Groq API
+                           │
+                           ▼
+                      RabbitMQ
+                           │
+                           ▼
+                 Evaluation Worker
+
+Fallback Flow:
+
+RabbitMQ Unavailable
+        │
+        ▼
+Direct Evaluation Service
+        │
+        ▼
+Evaluation Report Generated
 ```
 
-## Main User Flow
-
-1. User signs up or logs in with Firebase Auth.
-2. Backend verifies the Firebase token and syncs the user in MongoDB.
-3. User uploads a resume PDF for ATS analysis.
-4. Resume text is extracted, analyzed with Groq, cached in Redis, and credits are deducted.
-5. User starts an AI voice interview using a topic or resume-based context.
-6. Interview answers are stored and the final evaluation is queued through RabbitMQ.
-7. Worker evaluates the interview and updates the report in MongoDB.
-8. User views score, feedback, progress analytics, and history.
-9. User can buy more credits through Razorpay and view payment history.
 
 ## Backend Architecture
 
@@ -116,28 +129,37 @@ Resume PDF -> Extract text -> Hash text -> Check Redis
 
 ## RabbitMQ Evaluation Pipeline
 
-The AI voice interview uses an async evaluation pipeline:
+### Primary Flow
 
 ```text
 User submits final answer
-  |
-  v
-API marks interview as "evaluating"
-  |
-  v
-API publishes evaluation job to RabbitMQ
-  |
-  v
-Worker consumes job
-  |
-  v
-Worker calls Groq for strict interview scoring
-  |
-  v
-Worker updates MongoDB with final score and feedback
+        |
+        v
+Publish Job to RabbitMQ
+        |
+        v
+Evaluation Worker
+        |
+        v
+Groq Evaluation
+        |
+        v
+Store Report in MongoDB
 ```
 
-If evaluation fails, the interview can be marked as failed and retried from the user/admin flow.
+### Fallback Flow
+
+```text
+RabbitMQ Unavailable
+        |
+        v
+Direct Evaluation Service
+        |
+        v
+Generate Report Immediately
+```
+
+This ensures interview evaluation remains available even if the queue service is down.
 
 ## Razorpay Payment Flow
 
@@ -205,7 +227,7 @@ Create environment files for the client and server. Use placeholders only in com
 
 ### 4. Start local services
 
-Start MongoDB, Redis, and RabbitMQ using Docker or local installations.
+Start Redis and RabbitMQ using Docker. MongoDB can be run either locally or through Docker.
 
 ```bash
 docker compose -f docker-compose.yml up -d
@@ -372,6 +394,16 @@ Add screenshots after running the application locally.
 
 ## Author
 
-Built by **Kunal** as a full-stack SDE-1 portfolio project.
+Built By -
+Lucky Sanodiya
+B.Tech IT, NIT Raipur
+
+Interests:
+
+Full-Stack Development
+Backend Engineering
+Distributed Systems
+AI Applications
+Cloud & DevOps
 
 If this project helped you understand AI product architecture, authentication, payments, queues, or caching, consider starring the repository.
