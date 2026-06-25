@@ -4,6 +4,37 @@ HireReady AI is a full-stack AI-powered interview and resume preparation platfor
 
 > Status: MVP / portfolio-ready foundation. The project demonstrates real full-stack architecture and integrations, but should be hardened further before production use.
 
+# HireReady AI
+
+HireReady AI is a full-stack AI-powered interview and resume preparation platform built for job seekers. It combines resume ATS analysis, AI voice interview simulation, credit-based usage, payments, interview analytics, and admin/user dashboards in one practical job-preparation product.
+
+> Status: MVP / Portfolio-ready Full-Stack AI SaaS Platform
+
+---
+
+## 🌐 Live Demo
+
+🚧 Coming Soon
+
+---
+
+## 🛠️ Built With
+
+- React + Vite
+- Tailwind CSS
+- Zustand
+- Node.js
+- Express.js
+- MongoDB + Mongoose
+- Firebase Authentication
+- Groq AI
+- Redis
+- RabbitMQ
+- Razorpay
+- Docker
+
+---
+
 ## Problem Statement
 
 Job seekers often struggle to understand why their resumes are not shortlisted and how well they can perform in technical interviews. HireReady AI helps users practice with AI-driven interview sessions, analyze resumes for ATS compatibility, track progress, and manage usage through credits.
@@ -208,7 +239,7 @@ Admin access is controlled through configured admin email addresses.
 
 ```bash
 git clone https://github.com/jlucky03/HireReady.io.git
-cd HireReady-AI
+cd HireReady.io
 ```
 
 ### 2. Install dependencies
@@ -352,20 +383,53 @@ HireReady AI
 | `npm start` | Start Express server |
 | `npm run worker` | Start RabbitMQ evaluation worker |
 
-## Screenshots
+# 📸 Application Screenshots
 
-Add screenshots after running the application locally.
+## 🔐 Authentication
 
-| Screen | Preview |
-| --- | --- |
-| Login / Signup | `screenshots/auth.png` |
-| User Dashboard | `screenshots/dashboard.png` |
-| ATS Resume Analyzer | `screenshots/ats-analyzer.png` |
-| AI Voice Interview | `screenshots/interview-room.png` |
-| Evaluation Report | `screenshots/evaluation-report.png` |
-| Progress Analytics | `screenshots/progress-dashboard.png` |
-| Admin Dashboard | `screenshots/admin-dashboard.png` |
-| Payment History | `screenshots/payment-history.png` |
+![Authentication](screenshots/auth.png)
+
+---
+
+## 🏠 User Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+---
+
+## 📄 ATS Resume Analyzer
+
+![ATS Analyzer](screenshots/ats-analyzer.png)
+
+---
+
+## 🎤 AI Voice Interview
+
+![Interview Room](screenshots/interview-room.png)
+
+---
+
+## 📊 Evaluation Report
+
+![Evaluation Report](screenshots/evaluation-report.png)
+
+---
+
+## 📈 Progress Analytics
+
+![Progress Analytics](screenshots/progress-dashboard.png)
+
+---
+
+## 👨‍💼 Admin Dashboard
+
+![Admin Dashboard](screenshots/admin-dashboard.png)
+
+---
+
+## 💳 Payment History
+
+![Payment History](screenshots/payment-history.png)
 
 ## Future Improvements
 
@@ -379,6 +443,10 @@ Add screenshots after running the application locally.
 - Add code splitting to reduce frontend bundle size.
 - Improve mobile responsiveness and accessibility.
 - Add observability with structured logs and metrics.
+
+# 📄 License
+
+This project is intended for educational, portfolio, and demonstration purposes.
 
 ## Author
 
