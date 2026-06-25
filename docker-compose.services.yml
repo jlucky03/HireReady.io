@@ -1,12 +1,13 @@
+# docker-compose.services.yml
 services:
   redis:
-    image: redis:7.2-alpine
+    image: redis:7
     container_name: hireready-redis
     ports:
       - "6379:6379"
 
   rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    image: rabbitmq:3-management
     container_name: hireready-rabbitmq
     ports:
       - "5672:5672"

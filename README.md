@@ -207,7 +207,7 @@ Admin access is controlled through configured admin email addresses.
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/jlucky03/HireReady.io.git
 cd HireReady-AI
 ```
 
@@ -379,18 +379,6 @@ Add screenshots after running the application locally.
 - Add code splitting to reduce frontend bundle size.
 - Improve mobile responsiveness and accessibility.
 - Add observability with structured logs and metrics.
-
-## Interview Talking Points
-
-- Built a full-stack AI product with authentication, payments, caching, queue-based async processing, and dashboards.
-- Used Firebase Auth for frontend authentication and Firebase Admin SDK for backend token verification.
-- Designed a credit-based usage model for AI-heavy operations.
-- Integrated Groq API for ATS analysis, interview question generation, and final evaluation.
-- Used Redis to cache repeated ATS analysis and reduce unnecessary AI calls.
-- Used RabbitMQ and a worker process to move long-running evaluation outside the request-response cycle.
-- Implemented Razorpay signature verification before credit updates.
-- Modeled core entities with MongoDB and Mongoose: users, interviews, payments, and exams.
-- Added admin-only routing for monitoring users, credits, health, and failed evaluations.
 
 ## Author
 

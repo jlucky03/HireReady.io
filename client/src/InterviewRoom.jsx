@@ -341,9 +341,11 @@ export default function InterviewRoom({ topic, difficulty, onExit, onFinished })
                 </div>
 
                 <p className="text-xs text-slate-400">
-                  {topic ? `${topic}` : "Adaptive screening"}
-                  {difficulty ? ` · ${difficulty}` : ""}
-                </p>
+  {topic?.startsWith("RESUME_DATA_STREAM:")
+    ? "Personal Resume Screen"
+    : topic || "Adaptive screening"}
+  {difficulty ? ` · ${difficulty}` : ""}
+</p>
               </div>
             </div>
 
