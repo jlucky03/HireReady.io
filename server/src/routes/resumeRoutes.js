@@ -1,18 +1,34 @@
-import express from 'express';
-import multer from 'multer';
-import { protect } from '../controllers/authController.js';
-// 🌟 FIXED: Points straight to your official existing controller file path!
-import { analyzeAtsResumeScore } from '../controllers/resumeController.js';
+import express from "express";
+import multer from "multer";
+import { protect } from "../controllers/authController.js";
+import {
+  analyzeAtsResumeScore,
+  getAtsHistory,
+} from "../controllers/resumeController.js";
 import { redisRateLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
+
 const storage = multer.memoryStorage();
-const upload = multer({ 
+
+const fileFilter = (req, file, cb) => {
+  const isPdf =
+    file.mimetype === "application/pdf" ||
+    file.originalname.toLowerCase().endsWith(".pdf");
+
+  if (!isPdf) {
+    return cb(new Error("Only PDF resumes are allowed."), false);
+  }
+
+  cb(null, true);
+};
+
+const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter,
 });
 
-// Route handle configuration mapping
 router.post(
   "/analyze",
   protect,
@@ -25,4 +41,7 @@ router.post(
   upload.single("resume"),
   analyzeAtsResumeScore
 );
+
+router.get("/history", protect, getAtsHistory);
+
 export default router;

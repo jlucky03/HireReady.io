@@ -2,6 +2,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import Payment from "../models/Payment.js";
 import User from "../models/User.js";
+import { logAction } from "../utils/auditLogger.js";
 
 const getRazorpay = () =>
   new Razorpay({
@@ -30,13 +31,26 @@ const order = await razorpay.orders.create({
       receipt: `cr_${Date.now()}`,
     });
 
-    await Payment.create({
-      user: req.user._id,
-      razorpayOrderId: order.id,
-      amount: selectedPlan.amount,
-      credits: selectedPlan.credits,
-      status: "created",
-    });
+   const paymentRecord = await Payment.create({
+  user: req.user._id,
+  razorpayOrderId: order.id,
+  amount: selectedPlan.amount,
+  credits: selectedPlan.credits,
+  status: "created",
+});
+
+await logAction({
+  req,
+  action: "PAYMENT_ORDER_CREATED",
+  entityType: "Payment",
+  entityId: paymentRecord._id,
+  metadata: {
+    plan,
+    amount: selectedPlan.amount,
+    credits: selectedPlan.credits,
+    razorpayOrderId: order.id,
+  },
+});
 
     res.status(200).json({
       key: process.env.RAZORPAY_KEY_ID,
@@ -88,20 +102,29 @@ export const verifyCreditPayment = async (req, res) => {
         message: "Payment record not found.",
       });
     }
+if (payment.status === "paid") {
+  const freshUser = await User.findById(req.user._id).select("credits");
 
-    if (payment.status === "paid") {
-      return res.status(200).json({
-        status: "success",
-        message: "Payment already verified. Credits were already added.",
-        credits: req.user.credits,
-      });
-    }
+  return res.status(200).json({
+    status: "success",
+    message: "Payment already verified. Credits were already added.",
+    credits: freshUser?.credits ?? req.user.credits,
+  });
+}
 
-    const lockedPayment = await Payment.findOneAndUpdate(
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+const lockedPayment = await Payment.findOneAndUpdate(
+  {
+    _id: payment._id,
+    $or: [
+      { status: "created" },
       {
-        _id: payment._id,
-        status: "created",
+        status: "processing",
+        processingAt: { $lt: fiveMinutesAgo },
       },
+    ],
+  },
       {
         $set: {
           razorpayPaymentId: razorpay_payment_id,
@@ -137,11 +160,23 @@ export const verifyCreditPayment = async (req, res) => {
       }
     ).select("credits");
 
-    lockedPayment.status = "paid";
-    lockedPayment.paidAt = new Date();
-    await lockedPayment.save();
+ lockedPayment.status = "paid";
+lockedPayment.paidAt = new Date();
+await lockedPayment.save();
 
-    return res.status(200).json({
+await logAction({
+  req,
+  action: "PAYMENT_VERIFIED_CREDITS_ADDED",
+  entityType: "Payment",
+  entityId: lockedPayment._id,
+  metadata: {
+    amount: lockedPayment.amount,
+    credits: lockedPayment.credits,
+    razorpayPaymentId: razorpay_payment_id,
+  },
+});
+
+return res.status(200).json({
       status: "success",
       message: "Credits added successfully.",
       credits: updatedUser.credits,

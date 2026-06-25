@@ -6,22 +6,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     name: {
       type: String,
       trim: true,
     },
     role: {
-  type: String,
-  enum: ["user", "admin"],
-  default: "user",
-},
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
+    },
     email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
     photoURL: {
       type: String,
@@ -35,15 +38,13 @@ const userSchema = new mongoose.Schema(
     credits: {
       type: Number,
       default: 5,
-    },
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      min: 0,
     },
   },
   { timestamps: true }
 );
+
+userSchema.index({ createdAt: -1 });
 
 const User = mongoose.model("User", userSchema);
 export default User;

@@ -8,6 +8,7 @@ import {
   getFailedInterviews,
   getAdminHealth,
   retryFailedInterviewEvaluation,
+  getAuditLogs,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.patch("/users/:id/credits", updateUserCredits);
 router.get("/failed-interviews", getFailedInterviews);
 router.post("/failed-interviews/:id/retry", retryFailedInterviewEvaluation);
 router.get("/health", getAdminHealth);
+router.get("/audit-logs", getAuditLogs);
 
 export default router;

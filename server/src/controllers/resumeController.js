@@ -2,9 +2,18 @@ import PDFParser from 'pdf2json';
 import Groq from 'groq-sdk';
 import crypto from "crypto";
 import redisClient from "../config/redis.js";
+import ResumeAnalysis from "../models/ResumeAnalysis.js";
+import { logAction } from "../utils/auditLogger.js";
 
 const getResumeHash = (text) => {
   return crypto.createHash("sha256").update(text).digest("hex");
+};
+
+const normalizeResumeText = (text) => {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 };
 
 let groqInstance = null;
@@ -98,9 +107,10 @@ const defaultAtsFallback = {
 };
 
 export const analyzeAtsResumeScore = async (req, res) => {
+  const originalWarn = console.warn;
+
   try {
     // 🌟 SILENCE ENGINE CLUTTER: Intercept and drop pdf2json link/form element warnings
-    const originalWarn = console.warn;
     console.warn = function (...args) {
       const logMessage = args.join(' ');
       if (logMessage.includes('NOT valid form element') || logMessage.includes('Unsupported: field.type')) {
@@ -118,7 +128,8 @@ export const analyzeAtsResumeScore = async (req, res) => {
       return res.status(400).json({ message: 'Unable to read file contents. The uploaded PDF may be empty or image-only.' });
     }
 
-    const resumeHash = getResumeHash(resumeRawText);
+   const normalizedResumeText = normalizeResumeText(resumeRawText);
+const resumeHash = getResumeHash(normalizedResumeText);
 const cacheKey = `ats:${req.user._id}:${resumeHash}`;
 
 let cached = null;
@@ -134,7 +145,30 @@ try {
 if (cached) {
   const cachedData = JSON.parse(cached);
 
-  return res.status(200).json({
+  const historyRecord = await ResumeAnalysis.create({
+  user: req.user._id,
+  resumeName: req.file.originalname || "resume.pdf",
+  resumeHash,
+  type: "ats",
+  score: cachedData.atsAnalysis?.score || 0,
+  summary: cachedData.atsAnalysis?.summary || "",
+  improvements: cachedData.atsAnalysis?.improvements || [],
+  extractedText: cachedData.extractedText || "",
+  cached: true,
+});
+
+await logAction({
+  req,
+  action: "ATS_CACHE_HIT",
+  entityType: "ResumeAnalysis",
+  entityId: historyRecord._id,
+  metadata: {
+    resumeName: req.file.originalname || "resume.pdf",
+    score: cachedData.atsAnalysis?.score || 0,
+  },
+});
+
+return res.status(200).json({
     status: "success",
     atsAnalysis: cachedData.atsAnalysis,
     extractedText: cachedData.extractedText,
@@ -208,6 +242,31 @@ try {
 } catch (err) {
   console.warn("Redis cache save skipped:", err.message);
 }
+
+const historyRecord = await ResumeAnalysis.create({
+  user: req.user._id,
+  resumeName: req.file.originalname || "resume.pdf",
+  resumeHash,
+  type: "ats",
+  score: aiOutput?.score || 0,
+  summary: aiOutput?.summary || "",
+  improvements: aiOutput?.improvements || [],
+  extractedText: resumeRawText,
+  cached: false,
+});
+
+await logAction({
+  req,
+  action: "ATS_ANALYSIS_COMPLETED",
+  entityType: "ResumeAnalysis",
+  entityId: historyRecord._id,
+  metadata: {
+    resumeName: req.file.originalname || "resume.pdf",
+    score: aiOutput?.score || 0,
+    creditsUsed: 1,
+  },
+});
+
 res.status(200).json({
   status: 'success',
   atsAnalysis: aiOutput,
@@ -216,6 +275,26 @@ res.status(200).json({
   cached: false
 });
   } catch (err) {
-    res.status(500).json({ message: err?.message || 'Unexpected server error.' });
+    res.status(500).json({ message: err?.message || "Unexpected server error." });
+  } finally {
+    console.warn = originalWarn;
+  }
+};
+
+export const getAtsHistory = async (req, res) => {
+  try {
+    const history = await ResumeAnalysis.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean();
+
+    res.status(200).json({
+      status: "success",
+      history,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err?.message || "Failed to load ATS history.",
+    });
   }
 };

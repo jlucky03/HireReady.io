@@ -4,7 +4,8 @@ import Interview from "../models/Interview.js";
 import Payment from "../models/Payment.js";
 import { getRedisClient } from "../config/redis.js";
 import { getRabbitChannel, publishEvaluationJob } from "../config/rabbitmq.js";
-
+import AuditLog from "../models/AuditLog.js";
+import { logAction } from "../utils/auditLogger.js";
 const mongoStates = {
   0: "disconnected",
   1: "connected",
@@ -112,6 +113,18 @@ if (targetUser.role === "admin") {
 
 targetUser.credits = credits;
 await targetUser.save();
+
+await logAction({
+  req,
+  action: "ADMIN_UPDATE_USER_CREDITS",
+  entityType: "User",
+  entityId: targetUser._id,
+  targetUser: targetUser._id,
+  metadata: {
+    updatedCredits: credits,
+    targetEmail: targetUser.email,
+  },
+});
 
 const user = {
   _id: targetUser._id,
@@ -231,6 +244,18 @@ export const retryFailedInterviewEvaluation = async (req, res) => {
       triggeredBy: "admin",
     });
 
+    await logAction({
+  req,
+  action: "ADMIN_RETRY_FAILED_INTERVIEW",
+  entityType: "Interview",
+  entityId: interview._id,
+  targetUser: interview.user,
+  metadata: {
+    topic: interview.topic,
+    difficulty: interview.difficulty,
+  },
+});
+
     return res.status(202).json({
       message: "Evaluation retry queued successfully.",
       interviewId: interview._id,
@@ -239,6 +264,26 @@ export const retryFailedInterviewEvaluation = async (req, res) => {
   } catch (err) {
     return res.status(500).json({
       message: err.message || "Failed to retry evaluation.",
+    });
+  }
+};
+
+export const getAuditLogs = async (req, res) => {
+  try {
+    const logs = await AuditLog.find()
+      .populate("actor", "name email role")
+      .populate("targetUser", "name email role")
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    return res.status(200).json({
+      status: "success",
+      logs,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: err.message || "Failed to fetch audit logs.",
     });
   }
 };

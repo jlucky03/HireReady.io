@@ -1,32 +1,55 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const resumeAnalysisSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const resumeAnalysisSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    resumeName: {
+      type: String,
+      default: "resume.pdf",
+    },
+    resumeHash: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    type: {
+      type: String,
+      enum: ["ats"],
+      default: "ats",
+    },
+    score: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    summary: {
+      type: String,
+      default: "",
+    },
+    improvements: {
+      type: [String],
+      default: [],
+    },
+    extractedText: {
+      type: String,
+      default: "",
+    },
+    cached: {
+      type: Boolean,
+      default: false,
+    },
   },
-  type: {
-    type: String,
-    enum: ['ats', 'gap'],
-    required: true
-  },
-  resumeText: {
-    type: String,
-    required: true
-  },
-  // Target parameter metrics used during the corporate gap audits
-  targetCompany: String,
-  targetRole: String,
-  // The structured JSON payloads returned from the Llama 3.1 engine
-  score: {
-    type: Number,
-    default: 0
-  },
-  feedback: {
-    type: [String], // Structured array of bullet points
-    required: true
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-export default mongoose.model('ResumeAnalysis', resumeAnalysisSchema);
+resumeAnalysisSchema.index({ user: 1, createdAt: -1 });
+resumeAnalysisSchema.index({ user: 1, resumeHash: 1 });
+resumeAnalysisSchema.index({ user: 1, type: 1, createdAt: -1 });
+
+export default mongoose.model("ResumeAnalysis", resumeAnalysisSchema);

@@ -1,8 +1,3 @@
-# HireReady AI
-
-HireReady AI is a full-stack AI-powered interview and resume preparation platform built for job seekers. It combines resume ATS analysis, AI voice interview simulation, credit-based usage, payments, interview analytics, and admin/user dashboards in one practical job-preparation product.
-
-> Status: MVP / portfolio-ready foundation. The project demonstrates real full-stack architecture and integrations, but should be hardened further before production use.
 
 # HireReady AI
 

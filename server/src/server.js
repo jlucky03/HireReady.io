@@ -29,6 +29,14 @@ app.use("/api/admin", adminRoutes);
 app.get('/', (req, res) => {
   res.send('Intervyo.ai Core System API is online...');
 });
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.originalUrl}`,
+  });
+});
+
+app.use(errorHandler);
 app.use(errorHandler);
 
 
