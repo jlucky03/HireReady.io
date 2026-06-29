@@ -1,0 +1,73 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: hireready-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_storage:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: hireready-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: hireready-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    image: hireready-backend
+    container_name: hireready-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    image: hireready-backend
+    container_name: hireready-worker
+    command: npm run worker
+    env_file:
+      - ./server/.env
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: hireready-frontend
+    container_name: hireready-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  mongo_storage:
