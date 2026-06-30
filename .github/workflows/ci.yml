@@ -11,9 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Clone repository
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Install Node.js and cache npm packages
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -23,24 +25,37 @@ jobs:
             server/package-lock.json
             client/package-lock.json
 
+      # 3. Install backend packages
       - name: Install backend dependencies
         working-directory: ./server
         run: npm install
 
+      # 4. Install frontend packages
       - name: Install frontend dependencies
         working-directory: ./client
         run: npm install
 
+      # 5. Run ESLint
       - name: Run frontend ESLint
         working-directory: ./client
         run: npm run lint
 
+      # 6. Build React application
       - name: Build frontend
         working-directory: ./client
         run: npm run build
 
+      # 7. Upload React production build
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: client/dist
+
+      # 8. Verify backend Docker image
       - name: Build backend Docker image
         run: docker build -t hireready-backend ./server
 
+      # 9. Verify frontend Docker image
       - name: Build frontend Docker image
         run: docker build -t hireready-frontend ./client
