@@ -27,6 +27,10 @@ jobs:
         working-directory: ./client
         run: npm install
 
+      - name: Run frontend ESLint
+        working-directory: ./client
+        run: npm run lint  
+
       - name: Build frontend
         working-directory: ./client
         run: npm run build
