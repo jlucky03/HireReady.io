@@ -18,6 +18,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
 
       - name: Install backend dependencies
         working-directory: ./server
@@ -29,7 +33,7 @@ jobs:
 
       - name: Run frontend ESLint
         working-directory: ./client
-        run: npm run lint  
+        run: npm run lint
 
       - name: Build frontend
         working-directory: ./client
