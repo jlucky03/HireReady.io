@@ -1,382 +1,253 @@
+# 🚀 HireReady AI
 
-# HireReady AI
+> **AI-Powered Interview Preparation Platform with ATS Resume Analysis, AI Mock Interviews, Analytics, Credit System, Payments, and Production Deployment.**
 
-HireReady AI is a full-stack AI-powered interview and resume preparation platform built for job seekers. It combines resume ATS analysis, AI voice interview simulation, credit-based usage, payments, interview analytics, and admin/user dashboards in one practical job-preparation product.
+<p align="center">
 
-> ✅ Status: Production Deployed | Portfolio Ready | Dockerized | AWS EC2 Hosted
+![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![Node](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
+![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)
+![Redis](https://img.shields.io/badge/Redis-Cache-red?logo=redis)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Queue-orange?logo=rabbitmq)
+![Firebase](https://img.shields.io/badge/Firebase-Authentication-yellow?logo=firebase)
+![Docker](https://img.shields.io/badge/Docker-Container-blue?logo=docker)
+![AWS](https://img.shields.io/badge/AWS-EC2-orange?logo=amazonaws)
+![Razorpay](https://img.shields.io/badge/Razorpay-Payments-blue)
 
-Current Version: v1.0.0
-
----
-
-## 🌐 Live Demo
-
-## 🌐 Live Demo
-
-**Application**
-http://3.110.154.25
-
-> Hosted on AWS EC2 using Docker, Nginx, MongoDB, Redis and RabbitMQ.
+</p>
 
 ---
 
-## 🛠️ Built With
+# 🌐 Live Demo
 
-- React + Vite
-- Tailwind CSS
-- Zustand
-- Node.js
-- Express.js
-- MongoDB + Mongoose
-- Firebase Authentication
-- Groq AI
-- Redis
-- RabbitMQ
-- Razorpay
-- Docker
-- Nginx
-- Docker Compose
-- AWS EC2
-- GitHub Actions (if you later add CI)
+### 🔗 Application
+
+**http://3.110.154.25**
+
+> Hosted on **AWS EC2** using **Docker**, **Nginx**, **MongoDB**, **Redis**, and **RabbitMQ**.
 
 ---
 
-## Problem Statement
+# 📖 Overview
 
-Job seekers often struggle to understand why their resumes are not shortlisted and how well they can perform in technical interviews. HireReady AI helps users practice with AI-driven interview sessions, analyze resumes for ATS compatibility, track progress, and manage usage through credits.
+HireReady AI is a production-ready AI-powered interview preparation platform that helps candidates improve their chances of getting shortlisted by combining:
 
-## 🚀 Resume Highlights
+- 📄 ATS Resume Analysis
+- 🎤 AI Mock Interviews
+- 📊 Performance Analytics
+- 💳 Credit-Based Usage System
+- 💰 Razorpay Payments
+- 👨‍💼 Admin Dashboard
+- ⚡ Redis Caching
+- 📨 RabbitMQ Background Workers
 
-✔ Production Deployment on AWS EC2
-✔ Dockerized Microservice Architecture
-✔ Reverse Proxy using Nginx
-✔ Role-Based Access Control (RBAC)
-✔ Admin Dashboard
-✔ Background Worker using RabbitMQ
-✔ Redis Resume Cache
-✔ Payment Verification using Razorpay
-✔ Secure Firebase Authentication
-✔ Production Ready REST APIs
+The application simulates real interview workflows while providing detailed AI-generated feedback and progress tracking.
 
+---
 
-## Key Features
+# ✨ Key Features
 
-| Feature | Description |
-| --- | --- |
-| Firebase Auth | Email/password and Google authentication using Firebase. |
-| ATS Resume Analyzer | Upload a resume PDF and receive an AI-generated ATS score, summary, and improvement suggestions using Groq API. |
-| AI Voice Interview | Simulated voice interview flow with generated questions, speech input support, and final AI evaluation. |
-| Credit System | Credit-based access model for ATS scans and interview sessions. |
-| Razorpay Payments | Credit purchase flow using Razorpay order creation and signature verification. |
-| Payment History | Users can view completed credit purchase history. |
-| Redis Cache With Fallback | Resume analysis caching and rate limiting use Redis, while core app behavior can continue if Redis is unavailable. |
-| RabbitMQ Async Evaluation With Direct Fallback | Interview evaluation is designed around asynchronous background processing, with fallback behavior for resilient evaluation handling. |
-| Analytics Dashboard | Users can view interview history, scores, progress, weak areas, and topic-wise performance. |
-| Admin/User Routing | Role-based admin and user dashboard routing with admin tools for users, credits, health, and failed evaluations. |
-| Feature             | Description                                              |
-| ------------------- | -------------------------------------------------------- |
-| Docker Deployment   | Complete multi-container deployment using Docker Compose |
-| Nginx Reverse Proxy | Serves frontend and proxies API requests                 |
-| Admin Dashboard     | Manage users, monitor system health and audit logs       |
-| Health Monitoring   | Redis, RabbitMQ, MongoDB health endpoints                |
+## 🔐 Authentication
 
+- Firebase Email/Password Login
+- Google Authentication
+- Firebase Admin Token Verification
+- JWT Protected APIs
+- Persistent Login
+- Role-Based Authentication
 
-## Tech Stack
+---
+
+## 📄 ATS Resume Analyzer
+
+- Upload Resume (PDF)
+- AI ATS Score
+- Resume Summary
+- Skill Extraction
+- Strengths & Weaknesses
+- Improvement Suggestions
+- Redis Resume Cache
+- Credit Deduction after Successful Analysis
+
+---
+
+## 🎤 AI Mock Interview
+
+- AI Generated Questions
+- Resume Based Interviews
+- Voice Input Support
+- Five Question Interview Flow
+- AI Evaluation
+- Interview History
+- Performance Tracking
+
+---
+
+## 📊 Analytics Dashboard
+
+- Interview History
+- Topic-wise Performance
+- Average Score
+- Weak Areas
+- Progress Tracking
+- Evaluation Reports
+
+---
+
+## 💳 Payments
+
+- Razorpay Integration
+- Credit Purchase
+- Secure Signature Verification
+- Payment History
+- Automatic Credit Updates
+
+---
+
+## 👨‍💼 Admin Dashboard
+
+- User Management
+- Credit Monitoring
+- Audit Logs
+- System Health
+- Failed Evaluation Retry
+- Platform Statistics
+
+---
+
+# 🛠 Tech Stack
 
 | Layer | Technology |
-| --- | --- |
-| Frontend | React, Vite, Tailwind CSS, Zustand |
-| Authentication | Firebase Auth, Firebase Admin SDK |
+|--------|------------|
+| Frontend | React, Vite, TailwindCSS, Zustand |
 | Backend | Node.js, Express.js |
-| Database | MongoDB, Mongoose |
+| Database | MongoDB + Mongoose |
+| Authentication | Firebase Auth + Firebase Admin |
 | AI | Groq API |
 | Payments | Razorpay |
-| Cache / Rate Limit | Redis |
-| Queue / Worker | RabbitMQ, background evaluation worker |
-| Charts / UI | Recharts, Lucide React |
-Docker
-Docker Compose
-AWS EC2
-Nginx
-Redis
-RabbitMQ
-MongoDB
+| Cache | Redis |
+| Queue | RabbitMQ |
+| Deployment | Docker, Docker Compose |
+| Reverse Proxy | Nginx |
+| Cloud | AWS EC2 |
 
-## Architecture Overview
+---
 
-                React + Vite
-                     │
-                     ▼
-              Nginx Reverse Proxy
-                     │
-       ┌─────────────┴─────────────┐
-       ▼                           ▼
- Static Frontend              Express Backend
-                                      │
-      ┌───────────────┬───────────────┼──────────────┐
-      ▼               ▼               ▼              ▼
- MongoDB          Redis Cache      RabbitMQ      Firebase
-                                        │
-                                        ▼
-                               Evaluation Worker
-                ┌─────────────────────┐
-                │     React Client    │
-                └──────────┬──────────┘
-                           │
-                           ▼
-                ┌─────────────────────┐
-                │   Express Backend   │
-                └──────────┬──────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        ▼                  ▼                  ▼
-   MongoDB             Redis Cache         Groq API
-                           │
-                           ▼
-                      RabbitMQ
-                           │
-                           ▼
-                 Evaluation Worker
-
-Fallback Flow:
-
-RabbitMQ Unavailable
-        │
-        ▼
-Direct Evaluation Service
-        │
-        ▼
-Evaluation Report Generated
-```
-
-
-## Backend Architecture
-
-The backend follows a modular Express structure:
-
-- `routes/` defines API endpoints by domain.
-- `controllers/` contains request handling and business workflows.
-- `models/` contains Mongoose schemas.
-- `middleware/` contains validation, rate limiting, error handling, and admin access logic.
-- `config/` contains Firebase Admin, Redis, and RabbitMQ setup.
-- `workers/` contains background interview evaluation logic.
-
-Main backend domains:
-
-| Domain | Responsibility |
-| --- | --- |
-| Auth | Firebase login sync, protected user session, role handling |
-| Resume | PDF parsing, ATS analysis, Redis caching, credit usage |
-| Interview | AI question generation, answer submission, history, analytics |
-| Payments | Razorpay order creation, signature verification, credit updates |
-| Admin | Overview, user management, failed evaluation retry, system health |
-| Health | MongoDB, Redis, RabbitMQ, and API status checks |
-
-## Redis Caching Strategy
-
-Redis is used for:
-
-- ATS resume analysis caching by user and resume hash.
-- API rate limiting for expensive AI-backed endpoints.
-- Reducing duplicate Groq API calls for repeated resume scans.
-
-Example strategy:
+# 🏗 System Architecture
 
 ```text
-Resume PDF -> Extract text -> Hash text -> Check Redis
-  |
-  |-- Cache hit -> return saved ATS result, no credit deduction
-  |
-  |-- Cache miss -> call Groq, deduct credit, save result to Redis
+                    +----------------------+
+                    |    React + Vite      |
+                    +----------+-----------+
+                               |
+                               |
+                     Nginx Reverse Proxy
+                               |
+               +---------------+---------------+
+               |                               |
+        Static Frontend                 Express Backend
+                                               |
+      +----------------+----------------+----------------+
+      |                |                |                |
+   MongoDB          Redis          RabbitMQ         Firebase
+      |                |                |                |
+      |                |                |                |
+      +----------------+----------------+                |
+                       |                                 |
+                       +----------> Evaluation Worker <--+
+                                      |
+                                      |
+                                   Groq AI
 ```
 
-## RabbitMQ Evaluation Pipeline
+---
 
-### Primary Flow
+# ⚙️ Engineering Highlights
+
+- ✅ Production Deployment on AWS EC2
+- ✅ Dockerized Multi-Container Architecture
+- ✅ Reverse Proxy using Nginx
+- ✅ Firebase Authentication
+- ✅ Redis Resume Cache
+- ✅ Redis API Rate Limiting
+- ✅ RabbitMQ Background Worker
+- ✅ Razorpay Payment Verification
+- ✅ Modular Express Architecture
+- ✅ Role-Based Access Control
+- ✅ AI Powered Resume Analysis
+- ✅ AI Interview Evaluation
+- ✅ Production Ready REST APIs
+
+---
+
+# 🧠 Architecture Decisions
+
+### Redis
+
+Used for:
+
+- Resume Analysis Cache
+- API Rate Limiting
+- Reducing Expensive AI Calls
+
+---
+
+### RabbitMQ
+
+Used for:
+
+- Background Interview Evaluation
+- Asynchronous Processing
+- Improved Scalability
+
+If RabbitMQ becomes unavailable, the backend automatically switches to direct evaluation so interviews continue without interruption.
+
+---
+
+### Firebase
+
+Responsible for:
+
+- User Authentication
+- Google Login
+- Token Verification
+- Secure Backend Authentication
+
+---
+
+### Razorpay
+
+Used for:
+
+- Credit Purchases
+- Secure Signature Verification
+- Payment History
+- Automatic Credit Allocation
+
+---
+
+# 📂 Project Structure
 
 ```text
-User submits final answer
-        |
-        v
-Publish Job to RabbitMQ
-        |
-        v
-Evaluation Worker
-        |
-        v
-Groq Evaluation
-        |
-        v
-Store Report in MongoDB
-```
-
-### Fallback Flow
-
-```text
-RabbitMQ Unavailable
-        |
-        v
-Direct Evaluation Service
-        |
-        v
-Generate Report Immediately
-```
-
-This ensures interview evaluation remains available even if the queue service is down.
-
-## Razorpay Payment Flow
-
-```text
-User selects credit plan
-  |
-  v
-Backend creates Razorpay order
-  |
-  v
-Frontend opens Razorpay checkout
-  |
-  v
-Razorpay returns payment response
-  |
-  v
-Backend verifies signature
-  |
-  v
-Credits are added and payment is marked paid
-```
-
-Payment verification uses Razorpay signature validation before adding credits.
-
-## Admin/User Access Flow
-
-```text
-Firebase Login
-  |
-  v
-Backend verifies token
-  |
-  v
-User record loaded from MongoDB
-  |
-  |-- role = user  -> User Dashboard
-  |
-  |-- role = admin -> Admin Dashboard
-```
-
-Admin access is controlled through configured admin email addresses.
-
-## Local Setup Instructions
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/jlucky03/HireReady.io.git
-cd HireReady.io
-```
-
-### 2. Install dependencies
-
-```bash
-cd server
-npm install
-
-cd ../client
-npm install
-```
-
-### 3. Configure environment variables
-
-Create environment files for the client and server. Use placeholders only in committed files and keep real secrets local.
-
-### 4. Start local services
-
-Start Redis, RabbitMQ, MongoDB, backend, frontend, and Nginx using Docker.
-
-```bash
-docker compose -f docker-compose.devops.yml up -d
-```
-
-### 5. Start backend
-
-```bash
-cd server
-npm run dev
-```
-
-### 6. Start evaluation worker
-
-```bash
-cd server
-npm run worker
-```
-
-### 7. Start frontend
-
-```bash
-cd client
-npm run dev
-```
-
-Frontend usually runs on:
-
-```text
-http://localhost:5173
-```
-
-Backend usually runs on:
-
-```text
-http://localhost:5000
-```
-
-## Environment Variables
-
-Use these placeholders locally. Do not commit real secrets.
-
-```env
-GROQ_API_KEY=
-MONGO_URI=
-FIREBASE_PROJECT_ID=
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
-REDIS_URL=
-RABBITMQ_URL=
-ADMIN_EMAILS=
-CLIENT_URL=
-```
-
-Suggested frontend variables:
-
-```env
-VITE_API_URL=
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_APP_ID=
-```
-
-## Folder Structure
-
-```text
-HireReady AI
+HireReady.io
+│
 ├── client
 │   ├── public
 │   ├── src
+│   │   ├── assets
 │   │   ├── config
 │   │   ├── hooks
 │   │   ├── store
 │   │   ├── App.jsx
 │   │   ├── DashboardHome.jsx
 │   │   ├── InterviewRoom.jsx
-│   │   ├── EvaluationReport.jsx
 │   │   ├── ProgressAnalytics.jsx
 │   │   ├── AdminDashboard.jsx
-│   │   ├── BuyCredits.jsx
-│   │   └── PaymentHistory.jsx
+│   │   ├── PaymentHistory.jsx
+│   │   └── BuyCredits.jsx
+│   │
 │   ├── package.json
-│   └── vite.config.js
+│   └── Dockerfile
 │
 ├── server
 │   ├── src
@@ -387,32 +258,374 @@ HireReady AI
 │   │   ├── routes
 │   │   ├── validators
 │   │   ├── workers
+│   │   ├── utils
 │   │   └── server.js
-│   └── package.json
+│   │
+│   ├── package.json
+│   └── Dockerfile
 │
-├── docker-compose.yml
-├── docker-compose.services.yml
+├── nginx
+├── screenshots
+├── docker-compose.devops.yml
 └── README.md
 ```
 
-## Scripts / Commands
+---
 
-### Frontend
+# 📦 Backend Modules
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start Vite development server |
-| `npm run build` | Build frontend for production |
-| `npm run lint` | Run ESLint |
-| `npm run preview` | Preview production build |
+| Module | Responsibility |
+|----------|---------------|
+| Auth | Firebase Login & Authentication |
+| Resume | ATS Resume Analysis |
+| Interview | AI Interview Flow |
+| Payments | Razorpay Orders & Verification |
+| Admin | User & Platform Management |
+| Health | Service Monitoring |
+| Worker | RabbitMQ Interview Evaluation |
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+- Node.js 20+
+- MongoDB
+- Redis
+- RabbitMQ
+- Docker & Docker Compose
+- Firebase Project
+- Razorpay Test/Live Keys
+- Groq API Key
+
+---
+
+# 💻 Local Development
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/jlucky03/HireReady.io.git
+
+cd HireReady.io
+```
+
+---
+
+## 2. Install Dependencies
 
 ### Backend
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start Express server with Nodemon |
-| `npm start` | Start Express server |
-| `npm run worker` | Start RabbitMQ evaluation worker |
+```bash
+cd server
+npm install
+```
+
+### Frontend
+
+```bash
+cd ../client
+npm install
+```
+
+---
+
+## 3. Configure Environment Variables
+
+### Backend (.env)
+
+```env
+PORT=5000
+
+MONGO_URI=
+
+REDIS_URL=
+
+RABBITMQ_URL=
+
+JWT_SECRET=
+
+CLIENT_URL=
+
+ADMIN_EMAILS=
+
+GROQ_API_KEY=
+
+RAZORPAY_KEY_ID=
+
+RAZORPAY_KEY_SECRET=
+
+FIREBASE_PROJECT_ID=
+
+FIREBASE_CLIENT_EMAIL=
+
+FIREBASE_PRIVATE_KEY=
+```
+
+---
+
+### Frontend (.env)
+
+```env
+VITE_API_URL=
+
+VITE_FIREBASE_API_KEY=
+
+VITE_FIREBASE_AUTH_DOMAIN=
+
+VITE_FIREBASE_PROJECT_ID=
+
+VITE_FIREBASE_STORAGE_BUCKET=
+
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+
+VITE_FIREBASE_APP_ID=
+```
+
+---
+
+# ▶ Running Locally
+
+### Backend
+
+```bash
+cd server
+npm run dev
+```
+
+---
+
+### Worker
+
+```bash
+cd server
+npm run worker
+```
+
+---
+
+### Frontend
+
+```bash
+cd client
+npm run dev
+```
+
+Open
+
+```
+http://localhost:5173
+```
+
+---
+
+# 🐳 Docker Deployment
+
+Build and start all services
+
+```bash
+docker compose -f docker-compose.devops.yml up -d --build
+```
+
+Stop services
+
+```bash
+docker compose -f docker-compose.devops.yml down
+```
+
+View logs
+
+```bash
+docker logs hireready-backend
+
+docker logs hireready-worker
+```
+
+---
+
+# ☁ AWS EC2 Deployment
+
+Deploy using Docker Compose
+
+```bash
+git pull
+
+docker compose -f docker-compose.devops.yml pull
+
+docker compose -f docker-compose.devops.yml up -d --force-recreate
+```
+
+Verify deployment
+
+```bash
+docker ps
+
+docker logs hireready-backend
+
+docker logs hireready-worker
+```
+
+---
+
+# 🔄 ATS Resume Analysis Flow
+
+```text
+User Uploads Resume
+          │
+          ▼
+Extract PDF Text
+          │
+          ▼
+Check Redis Cache
+          │
+ ┌────────┴────────┐
+ │                 │
+ ▼                 ▼
+Cache Hit      Cache Miss
+ │                 │
+ ▼                 ▼
+Return Result   Groq AI Analysis
+                     │
+                     ▼
+             Store in Redis
+                     │
+                     ▼
+             Save to MongoDB
+```
+
+---
+
+# 🎤 Interview Evaluation Flow
+
+```text
+Start Interview
+        │
+        ▼
+Generate Questions
+        │
+        ▼
+User Answers
+        │
+        ▼
+Submit Final Answer
+        │
+        ▼
+Publish Job
+        │
+        ▼
+RabbitMQ Queue
+        │
+        ▼
+Evaluation Worker
+        │
+        ▼
+Groq AI
+        │
+        ▼
+Store Report
+        │
+        ▼
+Display Evaluation
+```
+
+---
+
+# 🔁 RabbitMQ Fallback
+
+```text
+RabbitMQ Down
+      │
+      ▼
+Direct Evaluation
+      │
+      ▼
+Groq AI
+      │
+      ▼
+Return Report
+```
+
+---
+
+# ⚡ Redis Cache Strategy
+
+Redis stores
+
+- ATS Resume Results
+- Resume Hash
+- API Rate Limiting
+- Temporary Cached Responses
+
+Benefits
+
+- Faster Responses
+- Lower AI Cost
+- Reduced Latency
+- Better User Experience
+
+---
+
+# 💳 Razorpay Payment Flow
+
+```text
+Choose Plan
+     │
+     ▼
+Create Order
+     │
+     ▼
+Open Razorpay
+     │
+     ▼
+Payment Success
+     │
+     ▼
+Verify Signature
+     │
+     ▼
+Add Credits
+     │
+     ▼
+Save Payment
+```
+
+---
+
+# 🔒 Authentication Flow
+
+```text
+User Login
+     │
+     ▼
+Firebase Authentication
+     │
+     ▼
+Receive ID Token
+     │
+     ▼
+Backend Verification
+     │
+     ▼
+MongoDB User Sync
+     │
+     ▼
+JWT Protected APIs
+```
+
+---
+
+# 👨‍💼 Admin Features
+
+- Dashboard Overview
+- User Management
+- Credit Monitoring
+- Audit Logs
+- Failed Evaluation Retry
+- Platform Health Monitoring
+- MongoDB Status
+- Redis Status
+- RabbitMQ Status
+
+---
 
 # 📸 Application Screenshots
 
@@ -434,21 +647,27 @@ HireReady AI
 
 ---
 
-## 🎤 AI Voice Interview
+## 🎤 AI Interview Room
 
 ![Interview Room](screenshots/interview-room.png)
 
 ---
 
-## 📊 Evaluation Report
+## 📊 AI Evaluation Report
 
 ![Evaluation Report](screenshots/evaluation-report.png)
 
 ---
 
-## 📈 Progress Analytics
+## 📈 Progress Dashboard
 
-![Progress Analytics](screenshots/progress-dashboard.png)
+![Progress Dashboard](screenshots/progress-dashboard.png)
+
+---
+
+## 💳 Payment History
+
+![Payment History](screenshots/payment-history.png)
 
 ---
 
@@ -458,39 +677,73 @@ HireReady AI
 
 ---
 
-## 💳 Payment History
+# 📈 Future Improvements
 
-![Payment History](screenshots/payment-history.png)
+- Kubernetes Deployment
+- GitHub Actions CI/CD
+- Prometheus Monitoring
+- Grafana Dashboards
+- WebSocket Live Interview Monitoring
+- Email Notifications
+- Interview Recording
+- Multi-language Support
+- Resume Version Comparison
+- AI Coding Interview Support
 
-## Future Improvements
+---
 
-- Add automated backend and frontend tests.
-- Add Razorpay webhook handling for stronger payment reconciliation.
-- Add stronger production security headers and request sanitization.
-- Move Firebase Admin credentials fully to environment-based configuration.
-- Add cloud deployment setup for frontend, backend, worker, Redis, RabbitMQ, and MongoDB.
-- Add downloadable ATS and interview reports.
-- Add more detailed resume history and comparison.
-- Add code splitting to reduce frontend bundle size.
-- Improve mobile responsiveness and accessibility.
-- Add observability with structured logs and metrics.
+# 🏆 Skills Demonstrated
+
+- Full Stack Development
+- REST API Design
+- Authentication & Authorization
+- Docker & Docker Compose
+- AWS EC2 Deployment
+- Redis Caching
+- RabbitMQ Messaging
+- MongoDB Design
+- Payment Gateway Integration
+- AI Application Development
+- Production Deployment
+- Backend Architecture
+- State Management
+- Cloud Infrastructure
+
+---
+
+# 👨‍💻 Author
+
+## Lucky Sanodiya
+
+**Final-Year B.Tech Information Technology Student**
+
+National Institute of Technology (NIT) Raipur
+
+### Interests
+
+- Backend Engineering
+- Full Stack Development
+- Distributed Systems
+- AI Applications
+- Cloud Computing
+- DevOps
+
+GitHub
+
+https://github.com/jlucky03
+
+---
+
+# ⭐ Support
+
+If you found this project useful or learned something from it, please consider giving it a ⭐ on GitHub.
+
+It helps the project reach more developers and motivates further improvements.
+
+---
 
 # 📄 License
 
-This project is intended for educational, portfolio, and demonstration purposes.
+This project is developed for **educational**, **portfolio**, and **learning** purposes.
 
-## Author
-
-Built By -
-Lucky Sanodiya
-B.Tech IT, NIT Raipur
-
-Interests:
-
-Full-Stack Development
-Backend Engineering
-Distributed Systems
-AI Applications
-Cloud & DevOps
-
-If this project helped you understand AI product architecture, authentication, payments, queues, or caching, consider starring the repository.
+© 2026 Lucky Sanodiya. All Rights Reserved.
