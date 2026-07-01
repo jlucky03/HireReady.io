@@ -18,8 +18,12 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "http://localhost"
-];
+  "http://localhost",
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL.trim()] : []),
+  ...(process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+    : []),
+].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -28,7 +32,7 @@ app.use(cors({
     }
     return callback(new Error("Not allowed by CORS"));
   },
-  credentials: true
+  credentials: true,
 }));
 app.use(express.json());
 
@@ -50,7 +54,6 @@ app.use((req, res) => {
   });
 });
 
-app.use(errorHandler);
 app.use(errorHandler);
 
 

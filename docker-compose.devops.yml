@@ -36,6 +36,8 @@ services:
       - "5000:5000"
     env_file:
       - ./server/.env
+    volumes:
+      - ./server/firebase-service-account.json:/app/firebase-service-account.json:ro
     depends_on:
       mongodb:
         condition: service_started
@@ -51,6 +53,8 @@ services:
     command: npm run worker
     env_file:
       - ./server/.env
+    volumes:
+      - ./server/firebase-service-account.json:/app/firebase-service-account.json:ro
     depends_on:
       mongodb:
         condition: service_started

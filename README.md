@@ -253,11 +253,10 @@ Create environment files for the client and server. Use placeholders only in com
 
 ### 4. Start local services
 
-Start Redis and RabbitMQ using Docker. MongoDB can be run either locally or through Docker.
+Start Redis, RabbitMQ, MongoDB, backend, frontend, and Nginx using Docker.
 
 ```bash
-docker compose -f docker-compose.yml up -d
-docker compose -f docker-compose.services.yml up -d
+docker compose -f docker-compose.devops.yml up -d
 ```
 
 ### 5. Start backend
