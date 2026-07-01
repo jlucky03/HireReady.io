@@ -16,6 +16,7 @@ client/.env
 # ==========================
 server/firebase-service-account.json
 firebase-service-account.json
+server/firebase-service-account.json.save
 *.save
 
 # ==========================
@@ -34,10 +35,9 @@ dist/
 build/
 
 # ==========================
-# OS Files
+# Coverage
 # ==========================
-.DS_Store
-Thumbs.db
+coverage/
 
 # ==========================
 # IDE
@@ -46,6 +46,7 @@ Thumbs.db
 .idea/
 
 # ==========================
-# Coverage
+# OS Files
 # ==========================
-coverage/
+.DS_Store
+Thumbs.db
