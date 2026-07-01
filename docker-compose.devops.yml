@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: hireready-backend
+    image: jlucky/hireready-backend:latest
     container_name: hireready-backend
     ports:
       - "5000:5000"
@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
 
   worker:
-    image: hireready-backend
+    image: jlucky/hireready-backend:latest
     container_name: hireready-worker
     command: npm run worker
     env_file:
@@ -61,7 +61,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: hireready-frontend
+    image: jlucky/hireready-frontend:latest
     container_name: hireready-frontend
     ports:
       - "3000:80"
