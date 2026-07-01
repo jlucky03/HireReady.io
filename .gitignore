@@ -3,3 +3,6 @@ node_modules/
 server/.env
 client/.env
 firebase-service-account.json
+
+server/firebase-service-account.json.save
+*.save
