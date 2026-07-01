@@ -3,13 +3,20 @@
 
 HireReady AI is a full-stack AI-powered interview and resume preparation platform built for job seekers. It combines resume ATS analysis, AI voice interview simulation, credit-based usage, payments, interview analytics, and admin/user dashboards in one practical job-preparation product.
 
-> Status: MVP / Portfolio-ready Full-Stack AI SaaS Platform
+> ✅ Status: Production Deployed | Portfolio Ready | Dockerized | AWS EC2 Hosted
+
+Current Version: v1.0.0
 
 ---
 
 ## 🌐 Live Demo
 
-🚧 Coming Soon
+## 🌐 Live Demo
+
+**Application**
+http://3.110.154.25
+
+> Hosted on AWS EC2 using Docker, Nginx, MongoDB, Redis and RabbitMQ.
 
 ---
 
@@ -27,6 +34,10 @@ HireReady AI is a full-stack AI-powered interview and resume preparation platfor
 - RabbitMQ
 - Razorpay
 - Docker
+- Nginx
+- Docker Compose
+- AWS EC2
+- GitHub Actions (if you later add CI)
 
 ---
 
@@ -36,18 +47,16 @@ Job seekers often struggle to understand why their resumes are not shortlisted a
 
 ## 🚀 Resume Highlights
 
-* Full-Stack AI SaaS Platform
-* React + Node.js + MongoDB Architecture
-* Firebase Authentication (Email/Password + Google Login)
-* AI Resume ATS Analysis using Groq LLM
-* AI Interview Evaluation System
-* Redis Caching Layer with Fallback Support
-* RabbitMQ Queue-Based Processing
-* Direct Evaluation Fallback Mechanism
-* Razorpay Payment Integration
-* Credit-Based Usage System
-* Analytics Dashboard & Progress Tracking
-* Admin Dashboard & Role-Based Access Control
+✔ Production Deployment on AWS EC2
+✔ Dockerized Microservice Architecture
+✔ Reverse Proxy using Nginx
+✔ Role-Based Access Control (RBAC)
+✔ Admin Dashboard
+✔ Background Worker using RabbitMQ
+✔ Redis Resume Cache
+✔ Payment Verification using Razorpay
+✔ Secure Firebase Authentication
+✔ Production Ready REST APIs
 
 
 ## Key Features
@@ -64,6 +73,13 @@ Job seekers often struggle to understand why their resumes are not shortlisted a
 | RabbitMQ Async Evaluation With Direct Fallback | Interview evaluation is designed around asynchronous background processing, with fallback behavior for resilient evaluation handling. |
 | Analytics Dashboard | Users can view interview history, scores, progress, weak areas, and topic-wise performance. |
 | Admin/User Routing | Role-based admin and user dashboard routing with admin tools for users, credits, health, and failed evaluations. |
+| Feature             | Description                                              |
+| ------------------- | -------------------------------------------------------- |
+| Docker Deployment   | Complete multi-container deployment using Docker Compose |
+| Nginx Reverse Proxy | Serves frontend and proxies API requests                 |
+| Admin Dashboard     | Manage users, monitor system health and audit logs       |
+| Health Monitoring   | Redis, RabbitMQ, MongoDB health endpoints                |
+
 
 ## Tech Stack
 
@@ -78,10 +94,31 @@ Job seekers often struggle to understand why their resumes are not shortlisted a
 | Cache / Rate Limit | Redis |
 | Queue / Worker | RabbitMQ, background evaluation worker |
 | Charts / UI | Recharts, Lucide React |
+Docker
+Docker Compose
+AWS EC2
+Nginx
+Redis
+RabbitMQ
+MongoDB
 
 ## Architecture Overview
 
-```text
+                React + Vite
+                     │
+                     ▼
+              Nginx Reverse Proxy
+                     │
+       ┌─────────────┴─────────────┐
+       ▼                           ▼
+ Static Frontend              Express Backend
+                                      │
+      ┌───────────────┬───────────────┼──────────────┐
+      ▼               ▼               ▼              ▼
+ MongoDB          Redis Cache      RabbitMQ      Firebase
+                                        │
+                                        ▼
+                               Evaluation Worker
                 ┌─────────────────────┐
                 │     React Client    │
                 └──────────┬──────────┘
