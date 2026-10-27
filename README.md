@@ -22,7 +22,7 @@
 
 ### 🔗 Application
 
-**(https://hire-ready.duckdns.org/)**
+**https://hire-ready.duckdns.org/**
 
 > Hosted on **AWS EC2** using **Docker**, **Nginx**, **MongoDB**, **Redis**, and **RabbitMQ**.
 
